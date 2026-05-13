@@ -1,0 +1,107 @@
+{% extends "mood/base.html" %}
+{% block title %}Profil — Moodify{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-header { margin-bottom: 2rem; }
+  .profile-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .profile-header p { color: var(--muted); }
+
+  .profile-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+  @media (min-width: 768px) {
+    .profile-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .card-section { margin-bottom: 1.5rem; }
+  .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+
+  .info-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .info-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .info-label { color: var(--muted); font-size: 0.95rem; }
+  .info-value { font-weight: 500; }
+
+  .stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); border-color: rgba(168,85,247,0.35); }
+  .stat-value { font-size: 2.2rem; font-weight: 700; color: var(--p1); margin-bottom: 0.3rem; }
+  .stat-label { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .dist-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+  .dist-label { font-size: 0.9rem; }
+  .dist-count { font-weight: 600; background: rgba(255,255,255,0.08); padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header fade-up">
+  <h1>Profilul meu 👤</h1>
+  <p>Gestionează-ți contul și vezi statisticile tale de-a lungul timpului.</p>
+</div>
+
+<div class="profile-grid">
+  <!-- Account Info -->
+  <div class="card fade-up" style="animation-delay: 100ms;">
+    <div class="card-section">
+      <h2 class="card-title">Detalii Cont</h2>
+      <div class="info-row">
+        <span class="info-label">Username</span>
+        <span class="info-value">{{ user.username }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email</span>
+        <span class="info-value">{{ user.email }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Membru din</span>
+        <span class="info-value">{{ user.date_joined|date:"d M Y" }}</span>
+      </div>
+      <div class="info-row" style="margin-top: 1.5rem; justify-content: center; border-bottom: none;">
+        <a class="btn btn-secondary" href="/password-reset/">Schimbă parola</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="card fade-up" style="animation-delay: 200ms;">
+    <h2 class="card-title">Statistici Moodify</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+      <div class="stat-card">
+        <div class="stat-value">{{ total_sessions }}</div>
+        <div class="stat-label">Sesiuni Totale</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center; height: 35px;">
+          {% if dominant_mood == 'sad' %}😔 Trist
+          {% elif dominant_mood == 'chillout' %}😌 Chill
+          {% elif dominant_mood == 'happy' %}😄 Fericit
+          {% else %}—{% endif %}
+        </div>
+        <div class="stat-label">Stare Dominantă</div>
+      </div>
+    </div>
+
+    {% if distribution %}
+    <h3 style="font-size: 1rem; color: var(--muted); margin-bottom: 0.8rem;">Distribuția Stărilor</h3>
+    {% for item in distribution %}
+      <div class="dist-row">
+        <span class="dist-label">
+          <span class="mood-badge mood-{{ item.mood_tag }}">
+            {% if item.mood_tag == 'sad' %}Trist
+            {% elif item.mood_tag == 'chillout' %}Chillout
+            {% else %}Fericit{% endif %}
+          </span>
+        </span>
+        <span class="dist-count">{{ item.count }} sesiuni</span>
+      </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

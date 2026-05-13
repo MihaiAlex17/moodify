@@ -35,8 +35,8 @@
   <form method="post">
     {% csrf_token %}
     <div class="form-group">
-      <label for="id_username">Username</label>
-      <input id="id_username" type="text" name="username" autocomplete="username" autofocus required>
+      <label for="id_username">Username sau Email</label>
+      <input id="id_username" type="text" name="username" autocomplete="username" autofocus required placeholder="Ex: alex sau alex@exemplu.com">
     </div>
     <div class="form-group">
       <label for="id_password">Parolă</label>

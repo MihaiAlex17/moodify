@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Count
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -108,7 +109,11 @@ def login_view(request):
         else:
             # Give a helpful message if account exists but isn't verified
             try:
-                unverified = User.objects.get(username__iexact=username)
+                if '@' in username:
+                    unverified = User.objects.get(email__iexact=username)
+                else:
+                    unverified = User.objects.get(username__iexact=username)
+                    
                 if not unverified.is_active and unverified.check_password(password):
                     error = 'Contul tău nu este activat. Verifică email-ul pentru linkul de confirmare.'
                 else:
@@ -196,3 +201,25 @@ def history(request):
         .prefetch_related('recommendations')
     )
     return render(request, 'mood/history.html', {'sessions': sessions})
+
+
+@login_required
+def profile_view(request):
+    sessions = MoodSession.objects.filter(user=request.user)
+    
+    total_sessions = sessions.count()
+    
+    # Calculate mood distribution
+    distribution = sessions.values('mood_tag').annotate(count=Count('id')).order_by('-count')
+    
+    dominant_mood = None
+    if distribution:
+        dominant_mood = distribution[0]['mood_tag']
+        
+    context = {
+        'total_sessions': total_sessions,
+        'dominant_mood': dominant_mood,
+        'distribution': distribution,
+    }
+    
+    return render(request, 'mood/profile.html', context)

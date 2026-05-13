@@ -9,4 +9,5 @@ urlpatterns = [
     path('verify/<str:token>/',         views.verify_email,  name='verify_email'),
     path('results/<int:session_id>/',   views.results,       name='results'),
     path('history/',                    views.history,       name='history'),
+    path('profile/',                    views.profile_view,  name='profile'),
 ]
