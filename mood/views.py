@@ -11,8 +11,8 @@ from django.conf import settings
 
 from .forms import RegisterForm
 from .models import MoodSession, Recommendation, TrackCache
-from .services import get_lastfm_tracks, get_spotify_token, get_spotify_link
-from analyzer import get_sentiment_score
+from .services import get_lastfm_tracks, get_artist_tracks_by_mood, get_spotify_token, get_spotify_link
+from analyzer import get_sentiment_score, get_context_tag
 
 # ---------------------------------------------------------------------------
 # Auth views
@@ -137,6 +137,8 @@ def logout_view(request):
 def mood_input(request):
     if request.method == 'POST':
         text = request.POST.get('mood_text', '').strip()
+        req_artist = request.POST.get('artist', '').strip()
+        
         if not text:
             return render(request, 'mood/mood.html', {'error': 'Scrie ceva despre starea ta.'})
 
@@ -148,14 +150,26 @@ def mood_input(request):
         else:
             tag = 'happy'
 
+        context_t = get_context_tag(text)
+
         session = MoodSession.objects.create(
             user=request.user,
             user_input=text,
             score=score,
             mood_tag=tag,
+            context_tag=context_t,
+            artist_requested=req_artist if req_artist else None,
         )
 
-        tracks = get_lastfm_tracks(tag)
+        # Get all track names the user has ever received to avoid duplicates
+        past_recommendations = Recommendation.objects.filter(session__user=request.user)
+        excluded_track_names = set(past_recommendations.values_list('track_name', flat=True))
+
+        if req_artist:
+            tracks = get_artist_tracks_by_mood(req_artist, tag, excluded=excluded_track_names)
+        else:
+            tracks = get_lastfm_tracks(tag, context=context_t, excluded=excluded_track_names)
+            
         token  = get_spotify_token()
 
         for i, p in enumerate(tracks, 1):

@@ -52,6 +52,38 @@ def get_sentiment_score(text: str) -> float:
 
     return round(score, 2)
 
+# Etichete de context/gen (vom alege cel mult unul daca are scor mare)
+GENRE_LABELS = [
+    "rock", "pop", "hip hop", "jazz", "electronic", "clasică", "lo-fi", 
+    "acustic", "metal", "relaxare", "sport", "petrecere", "somn"
+]
+
+def get_context_tag(text: str) -> str:
+    """
+    Extrage un posibil context sau gen muzical din text folosind zero-shot classification (multi_label=True).
+    Returneaza un string (ex: 'rock') sau None daca nu detecteaza nimic clar.
+    """
+    # multi_label=True trateaza fiecare eticheta independent (probabilitati 0-1)
+    result = classifier(text, candidate_labels=GENRE_LABELS, multi_label=True)
+    
+    best_label = result["labels"][0]
+    best_score = result["scores"][0]
+    
+    # Daca probabilitatea este mai mare de 40%, presupunem ca e un context valid
+    if best_score >= 0.40:
+        # Traducem in engleza pentru cautarea pe Last.fm, daca e cazul
+        translations = {
+            "clasică": "classical",
+            "acustic": "acoustic",
+            "relaxare": "relaxing",
+            "sport": "workout",
+            "petrecere": "party",
+            "somn": "sleep",
+        }
+        return translations.get(best_label, best_label)
+        
+    return None
+
 
 # --- Test rapid la import (comenteaza daca nu vrei output la import) ---
 if __name__ == "__main__":

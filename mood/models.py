@@ -9,11 +9,13 @@ class MoodSession(models.Model):
         ('happy', 'Happy'),
     ]
 
-    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions')
-    user_input = models.TextField()
-    score      = models.FloatField()
-    mood_tag   = models.CharField(max_length=20, choices=MOOD_CHOICES)
-    created_at = models.DateTimeField(auto_now_add=True)
+    user        = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions')
+    user_input  = models.TextField()
+    score            = models.FloatField()
+    mood_tag         = models.CharField(max_length=20, choices=MOOD_CHOICES)
+    context_tag      = models.CharField(max_length=50, blank=True, null=True)
+    artist_requested = models.CharField(max_length=100, blank=True, null=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
