@@ -1,0 +1,43 @@
+# ============================================================
+# Moodify — .gitignore
+# ============================================================
+
+# Secrets — NICIODATA in git!
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Django
+*.log
+db.sqlite3
+media/
+staticfiles/
+/static/
+
+# HuggingFace model cache (very large — don't commit)
+.cache/
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/

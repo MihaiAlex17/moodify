@@ -1,0 +1,22 @@
+# Normalize line endings to LF in the repository (CRLF on Windows checkout)
+* text=auto
+
+# Python
+*.py    text eol=lf
+
+# HTML / CSS / JS
+*.html  text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+
+# Config / data
+*.txt   text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.env   text eol=lf
+
+# Binary — no conversion
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.db    binary

@@ -1,0 +1,28 @@
+{% extends "mood/base.html" %}
+{% block title %}Verifică email-ul — Moodify{% endblock %}
+{% block extra_css %}
+<style>
+  main { display:flex; justify-content:center; align-items:center; }
+  .info-card { max-width:460px; width:100%; text-align:center; }
+  .big-icon { font-size:3.5rem; margin-bottom:1rem; }
+  h1 { font-size:1.8rem; font-weight:700; margin-bottom:0.6rem; }
+  p  { color:var(--muted); line-height:1.7; }
+  .email-pill {
+    display:inline-block; margin:1rem 0;
+    background:rgba(139,92,246,0.12); border:1px solid var(--border);
+    border-radius:999px; padding:0.35rem 1.1rem;
+    color:var(--p3); font-size:0.95rem;
+  }
+  .note { font-size:0.85rem; color:var(--muted); margin-top:1.5rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="info-card card fade-up">
+  <div class="big-icon">📬</div>
+  <h1>Verifică email-ul!</h1>
+  <p>Am trimis un link de confirmare la:</p>
+  <span class="email-pill">{{ email }}</span>
+  <p>Click pe link pentru a-ți activa contul și a începe să folosești Moodify.</p>
+  <p class="note">Linkul este valabil <strong>24 de ore</strong>. Verifică și folderul Spam dacă nu-l găsești.</p>
+</div>
+{% endblock %}

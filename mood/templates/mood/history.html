@@ -1,0 +1,120 @@
+{% extends "mood/base.html" %}
+{% block title %}Istoricul meu — Moodify{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 { font-size: 2rem; font-weight: 700; }
+  .page-header p { color: var(--muted); margin-top: 0.3rem; }
+
+  .session-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 1.2rem; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .session-card:hover { border-color: rgba(168,85,247,0.35); }
+
+  .session-header {
+    padding: 1.1rem 1.4rem; display: flex; align-items: center;
+    gap: 1rem; flex-wrap: wrap; cursor: pointer;
+    border-bottom: 1px solid transparent; transition: border-color 0.2s;
+  }
+  .session-header.open { border-bottom-color: var(--border); }
+  .session-meta { flex: 1; }
+  .session-input {
+    font-size: 0.92rem; margin-top: 0.2rem; color: var(--muted);
+    font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;
+  }
+  .session-date { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+  .score-pill {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.8rem; color: var(--muted);
+  }
+  .chevron { font-size: 0.8rem; color: var(--muted); transition: transform 0.25s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  .session-body { padding: 1rem 1.4rem; display: none; }
+  .session-body.open { display: block; }
+
+  .track-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .track-row:last-child { border-bottom: none; }
+  .track-num { font-size: 0.85rem; color: var(--p2); min-width: 22px; font-weight: 600; }
+  .track-text { flex: 1; }
+  .track-text .tn { font-size: 0.92rem; font-weight: 500; }
+  .track-text .ta { font-size: 0.82rem; color: var(--muted); }
+
+  .empty-state {
+    text-align: center; padding: 4rem 1rem;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state h2 { font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-up">
+  <h1>Istoricul meu 📖</h1>
+  <p>Toate sesiunile tale de analiză a stării, cu recomandările aferente.</p>
+</div>
+
+{% if sessions %}
+  {% for session in sessions %}
+  <div class="session-card fade-up" style="animation-delay:{{ forloop.counter0 }}0ms">
+    <div class="session-header" onclick="toggleSession({{ session.id }})">
+      <span class="mood-badge mood-{{ session.mood_tag }}">
+        {% if session.mood_tag == 'sad' %}😔 Trist
+        {% elif session.mood_tag == 'chillout' %}😌 Chill
+        {% else %}😄 Fericit{% endif %}
+      </span>
+      <div class="session-meta">
+        <div class="session-input">"{{ session.user_input }}"</div>
+      </div>
+      <span class="score-pill">{{ session.score }}</span>
+      <span class="session-date">{{ session.created_at|date:"d M Y, H:i" }}</span>
+      <span class="chevron" id="chevron-{{ session.id }}">▼</span>
+    </div>
+
+    <div class="session-body" id="body-{{ session.id }}">
+      {% for track in session.recommendations.all %}
+      <div class="track-row">
+        <span class="track-num">{{ track.rank }}</span>
+        <div class="track-text">
+          <div class="tn">{{ track.track_name }}</div>
+          <div class="ta">{{ track.artist_name }}</div>
+        </div>
+        {% if track.has_spotify %}
+        <a class="btn btn-spotify" href="{{ track.spotify_url }}" target="_blank" rel="noopener">▶</a>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p style="color:var(--muted);font-size:0.9rem;">Nicio piesă salvată pentru această sesiune.</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+{% else %}
+<div class="empty-state fade-up">
+  <div class="icon">🎵</div>
+  <h2>Nicio sesiune încă</h2>
+  <p>Descrie-ți starea și primești prima ta recomandare muzicală.</p>
+  <a class="btn btn-primary" href="/" style="margin-top:1.5rem;display:inline-flex;">Începe acum</a>
+</div>
+{% endif %}
+
+<script>
+  function toggleSession(id) {
+    const body    = document.getElementById('body-' + id);
+    const chevron = document.getElementById('chevron-' + id);
+    const header  = body.previousElementSibling;
+    const isOpen  = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "mood/base.html" %}
+{% block title %}Recomandări — Moodify{% endblock %}
+
+{% block extra_css %}
+<style>
+  .results-header { margin-bottom: 2rem; }
+  .results-header h1 { font-size: 1.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .meta-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .score-pill {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    border-radius: 999px; padding: 0.25rem 0.8rem; font-size: 0.82rem; color: var(--muted);
+  }
+  .quote-box {
+    background: rgba(255,255,255,0.03); border-left: 3px solid var(--p1);
+    border-radius: 0 8px 8px 0; padding: 0.8rem 1.2rem; margin: 1rem 0 2rem;
+    color: var(--muted); font-style: italic; font-size: 0.95rem;
+  }
+
+  .tracks-grid { display: flex; flex-direction: column; gap: 1rem; }
+  .track-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.1rem 1.4rem; display: flex; align-items: center; gap: 1.2rem;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .track-card:hover {
+    transform: translateX(5px);
+    border-color: rgba(168,85,247,0.4);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .track-rank {
+    font-size: 1.4rem; font-weight: 700; color: var(--p1);
+    min-width: 32px; text-align: center;
+  }
+  .track-info { flex: 1; }
+  .track-name { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .track-artist { font-size: 0.88rem; color: var(--muted); }
+  .track-actions { flex-shrink: 0; }
+
+  .actions-row { display: flex; gap: 1rem; margin-top: 2.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% with tag=session.mood_tag %}
+<div class="results-header fade-up">
+  <h1>Recomandările tale 🎧</h1>
+  <div class="meta-row">
+    <span class="mood-badge mood-{{ tag }}">
+      {% if tag == 'sad' %}😔 Trist{% elif tag == 'chillout' %}😌 Chill{% else %}😄 Fericit{% endif %}
+    </span>
+    <span class="score-pill">Scor: {{ session.score }}</span>
+    <span class="score-pill">{{ session.created_at|date:"d M Y, H:i" }}</span>
+  </div>
+</div>
+
+<div class="quote-box fade-up" style="animation-delay:0.05s">
+  "{{ session.user_input }}"
+</div>
+
+<div class="tracks-grid">
+  {% for track in tracks %}
+  <div class="track-card fade-up" style="animation-delay:{{ forloop.counter0 }}00ms">
+    <div class="track-rank">{{ track.rank }}</div>
+    <div class="track-info">
+      <div class="track-name">{{ track.track_name }}</div>
+      <div class="track-artist">{{ track.artist_name }}</div>
+    </div>
+    <div class="track-actions">
+      {% if track.has_spotify %}
+      <a class="btn btn-spotify" href="{{ track.spotify_url }}" target="_blank" rel="noopener">
+        ▶ Spotify
+      </a>
+      {% else %}
+      <span style="color:var(--muted);font-size:0.82rem;">Indisponibil</span>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <p style="color:var(--muted);text-align:center;padding:2rem;">Nu am găsit piese. Încearcă din nou.</p>
+  {% endfor %}
+</div>
+
+<div class="actions-row fade-up">
+  <a class="btn btn-primary" href="/">Încearcă din nou</a>
+  <a class="btn btn-secondary" href="/history/">Vezi istoricul</a>
+</div>
+{% endwith %}
+{% endblock %}

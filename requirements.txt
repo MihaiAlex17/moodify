@@ -1,0 +1,11 @@
+# Moodify - Direct Dependencies
+# Install with: pip install -r requirements.txt
+
+transformers    # NLP pipeline (zero-shot classification)
+torch           # Inference backend for transformers
+sentencepiece   # XLM-RoBERTa tokenizer
+protobuf        # Required by transformers v5 SentencePieceExtractor
+requests        # Last.fm & Spotify API calls
+django          # Web framework
+psycopg2-binary # PostgreSQL driver
+python-dotenv   # Load .env into os.environ automatically
