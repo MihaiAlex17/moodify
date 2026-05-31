@@ -53,3 +53,25 @@ class TrackCache(models.Model):
 
     def __str__(self):
         return f"{self.track_name} — {self.artist_name}"
+
+
+class TrackFeedback(models.Model):
+    user           = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedback')
+    recommendation = models.ForeignKey(Recommendation, on_delete=models.CASCADE, related_name='feedback')
+    liked          = models.BooleanField()          # True = 👍, False = 👎
+    created_at     = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'recommendation')  # one vote per track per user
+
+    def __str__(self):
+        verdict = '👍' if self.liked else '👎'
+        return f"{verdict} {self.user.username} → {self.recommendation.track_name}"
+
+
+class UserPreferences(models.Model):
+    user   = models.OneToOneField(User, on_delete=models.CASCADE, related_name='preferences')
+    genres = models.JSONField(default=list, blank=True)   # e.g. ["rock", "pop", "lo-fi"]
+
+    def __str__(self):
+        return f"{self.user.username} — preferences ({len(self.genres)} genres)"

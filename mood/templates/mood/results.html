@@ -1,4 +1,5 @@
 {% extends "mood/base.html" %}
+{% load mood_extras %}
 {% block title %}Recomandări — Moodify{% endblock %}
 
 {% block extra_css %}
@@ -32,9 +33,35 @@
     min-width: 32px; text-align: center;
   }
   .track-info { flex: 1; }
-  .track-name { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .track-name   { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
   .track-artist { font-size: 0.88rem; color: var(--muted); }
-  .track-actions { flex-shrink: 0; }
+
+  /* ── Feedback buttons ── */
+  .track-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+  .fb-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.38rem 0.7rem;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.15s;
+    line-height: 1;
+    color: var(--text);
+  }
+  .fb-btn:hover { transform: scale(1.12); background: rgba(255,255,255,0.1); }
+
+  /* Active states */
+  .fb-btn.liked-active {
+    background: rgba(34, 197, 94, 0.18);
+    border-color: rgba(34, 197, 94, 0.55);
+    box-shadow: 0 0 8px rgba(34,197,94,0.25);
+  }
+  .fb-btn.disliked-active {
+    background: rgba(248, 113, 113, 0.18);
+    border-color: rgba(248, 113, 113, 0.55);
+    box-shadow: 0 0 8px rgba(248,113,113,0.25);
+  }
 
   .actions-row { display: flex; gap: 1rem; margin-top: 2.5rem; }
 </style>
@@ -59,7 +86,7 @@
 
 <div class="tracks-grid">
   {% for track in tracks %}
-  <div class="track-card fade-up" style="animation-delay:{{ forloop.counter0 }}00ms">
+  <div class="track-card fade-up" style="animation-delay:{{ forloop.counter0 }}00ms" id="track-card-{{ track.id }}">
     <div class="track-rank">{{ track.rank }}</div>
     <div class="track-info">
       <div class="track-name">{{ track.track_name }}</div>
@@ -67,12 +94,26 @@
     </div>
     <div class="track-actions">
       {% if track.has_spotify %}
-      <a class="btn btn-spotify" href="{{ track.spotify_url }}" target="_blank" rel="noopener">
-        ▶ Spotify
-      </a>
+      <a class="btn btn-spotify" href="{{ track.spotify_url }}" target="_blank" rel="noopener">▶ Spotify</a>
       {% else %}
       <span style="color:var(--muted);font-size:0.82rem;">Indisponibil</span>
       {% endif %}
+
+      <!-- 👍 -->
+      <button
+        class="fb-btn {% if user_feedback|get_item:track.id == True %}liked-active{% endif %}"
+        id="like-{{ track.id }}"
+        onclick="sendFeedback({{ track.id }}, true)"
+        title="Îmi place"
+        aria-label="Like">👍</button>
+
+      <!-- 👎 -->
+      <button
+        class="fb-btn {% if user_feedback|get_item:track.id == False %}disliked-active{% endif %}"
+        id="dislike-{{ track.id }}"
+        onclick="sendFeedback({{ track.id }}, false)"
+        title="Nu îmi place"
+        aria-label="Dislike">👎</button>
     </div>
   </div>
   {% empty %}
@@ -85,4 +126,39 @@
   <a class="btn btn-secondary" href="/history/">Vezi istoricul</a>
 </div>
 {% endwith %}
+
+<script>
+const CSRF = '{{ csrf_token }}';
+
+async function sendFeedback(trackId, liked) {
+  const likeBtn    = document.getElementById('like-'    + trackId);
+  const dislikeBtn = document.getElementById('dislike-' + trackId);
+
+  const res = await fetch(`/feedback/${trackId}/`, {
+    method:  'POST',
+    headers: {
+      'X-CSRFToken':  CSRF,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `liked=${liked}`,
+  });
+
+  if (!res.ok) return;
+  const data = await res.json();   // {liked: true | false | null}
+
+  // Reset both buttons
+  likeBtn.classList.remove('liked-active');
+  dislikeBtn.classList.remove('disliked-active');
+
+  if (data.liked === true)  likeBtn.classList.add('liked-active');
+  if (data.liked === false) dislikeBtn.classList.add('disliked-active');
+
+  // Micro-bounce animation
+  const active = data.liked === true ? likeBtn : data.liked === false ? dislikeBtn : null;
+  if (active) {
+    active.style.transform = 'scale(1.3)';
+    setTimeout(() => active.style.transform = '', 200);
+  }
+}
+</script>
 {% endblock %}

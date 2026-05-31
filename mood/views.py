@@ -1,3 +1,5 @@
+import json
+import random
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count
 from django.contrib.auth import authenticate, login, logout
@@ -8,11 +10,49 @@ from django.contrib.auth.views import PasswordResetConfirmView
 from django.core import signing
 from django.core.mail import send_mail
 from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 from .forms import RegisterForm
-from .models import MoodSession, Recommendation, TrackCache
-from .services import get_lastfm_tracks, get_artist_tracks_by_mood, get_spotify_token, get_spotify_link
+from .models import MoodSession, Recommendation, TrackCache, TrackFeedback, UserPreferences
+from .services import (
+    get_lastfm_tracks, get_artist_tracks_by_mood,
+    get_spotify_token, get_spotify_link,
+    search_lastfm_track, get_similar_tracks,
+)
 from analyzer import get_sentiment_score, get_context_tag
+
+# ---------------------------------------------------------------------------
+# Genre catalogue (shared between preferences page and recommendations)
+# ---------------------------------------------------------------------------
+
+AVAILABLE_GENRES = [
+    {"id": "rock",        "label": "Rock",        "emoji": "🎸"},
+    {"id": "pop",         "label": "Pop",         "emoji": "🎵"},
+    {"id": "hip hop",     "label": "Hip Hop",     "emoji": "🎤"},
+    {"id": "jazz",        "label": "Jazz",        "emoji": "🎷"},
+    {"id": "electronic",  "label": "Electronic",  "emoji": "🎧"},
+    {"id": "classical",   "label": "Clasică",     "emoji": "🎻"},
+    {"id": "lo-fi",       "label": "Lo-Fi",       "emoji": "🌙"},
+    {"id": "acoustic",    "label": "Acustic",     "emoji": "🪕"},
+    {"id": "metal",       "label": "Metal",       "emoji": "🤘"},
+    {"id": "indie",       "label": "Indie",       "emoji": "🌿"},
+    {"id": "rnb",         "label": "R\u0026B",         "emoji": "💜"},
+    {"id": "soul",        "label": "Soul",        "emoji": "✨"},
+    {"id": "country",     "label": "Country",     "emoji": "🤠"},
+    {"id": "reggae",      "label": "Reggae",      "emoji": "🌴"},
+    {"id": "blues",       "label": "Blues",       "emoji": "🎺"},
+    {"id": "folk",        "label": "Folk",        "emoji": "🪕"},
+    {"id": "punk",        "label": "Punk",        "emoji": "⚡"},
+    {"id": "alternative", "label": "Alternative", "emoji": "🎭"},
+    {"id": "dance",       "label": "Dance",       "emoji": "💃"},
+    {"id": "ambient",     "label": "Ambient",     "emoji": "🌊"},
+    {"id": "latin",       "label": "Latin",       "emoji": "🕺"},
+    {"id": "trap",        "label": "Trap",        "emoji": "🔊"},
+    {"id": "workout",     "label": "Workout",     "emoji": "💪"},
+    {"id": "sleep",       "label": "Sleep",       "emoji": "😴"},
+    {"id": "party",       "label": "Party",       "emoji": "🎉"},
+]
 
 # ---------------------------------------------------------------------------
 # Auth views
@@ -152,6 +192,15 @@ def mood_input(request):
 
         context_t = get_context_tag(text)
 
+        # Fall back to a random user genre preference if AI found nothing
+        if not context_t:
+            try:
+                prefs = request.user.preferences
+                if prefs.genres:
+                    context_t = random.choice(prefs.genres)
+            except UserPreferences.DoesNotExist:
+                pass
+
         session = MoodSession.objects.create(
             user=request.user,
             user_input=text,
@@ -204,7 +253,21 @@ def mood_input(request):
 def results(request, session_id):
     session = get_object_or_404(MoodSession, id=session_id, user=request.user)
     tracks  = session.recommendations.all()
-    return render(request, 'mood/results.html', {'session': session, 'tracks': tracks})
+
+    # Build a dict of {recommendation_id: liked (True/False/None)}
+    user_feedback = {
+        fb.recommendation_id: fb.liked
+        for fb in TrackFeedback.objects.filter(
+            user=request.user,
+            recommendation__in=tracks,
+        )
+    }
+
+    return render(request, 'mood/results.html', {
+        'session':       session,
+        'tracks':        tracks,
+        'user_feedback': user_feedback,
+    })
 
 
 @login_required
@@ -214,26 +277,165 @@ def history(request):
         .filter(user=request.user)
         .prefetch_related('recommendations')
     )
-    return render(request, 'mood/history.html', {'sessions': sessions})
+
+    # All track IDs the user has rated, for the history view
+    all_rec_ids = Recommendation.objects.filter(session__user=request.user).values_list('id', flat=True)
+    user_feedback = {
+        fb.recommendation_id: fb.liked
+        for fb in TrackFeedback.objects.filter(user=request.user, recommendation_id__in=all_rec_ids)
+    }
+
+    return render(request, 'mood/history.html', {
+        'sessions':      sessions,
+        'user_feedback': user_feedback,
+    })
+
+
+@login_required
+@require_POST
+def feedback_view(request, recommendation_id):
+    """Toggle 👍/👎 on a track. Returns JSON {liked: true|false|null}."""
+    rec = get_object_or_404(Recommendation, id=recommendation_id, session__user=request.user)
+    liked_value = request.POST.get('liked')          # 'true' or 'false'
+    liked = liked_value == 'true'
+
+    existing = TrackFeedback.objects.filter(user=request.user, recommendation=rec).first()
+
+    if existing:
+        if existing.liked == liked:
+            # Same button clicked again → remove vote
+            existing.delete()
+            return JsonResponse({'liked': None})
+        else:
+            # Opposite button → switch
+            existing.liked = liked
+            existing.save()
+            return JsonResponse({'liked': liked})
+    else:
+        TrackFeedback.objects.create(user=request.user, recommendation=rec, liked=liked)
+        return JsonResponse({'liked': liked})
 
 
 @login_required
 def profile_view(request):
     sessions = MoodSession.objects.filter(user=request.user)
-    
+
     total_sessions = sessions.count()
-    
+
     # Calculate mood distribution
     distribution = sessions.values('mood_tag').annotate(count=Count('id')).order_by('-count')
-    
+
     dominant_mood = None
     if distribution:
         dominant_mood = distribution[0]['mood_tag']
-        
+
+    # Serialize sessions chronologically for the Chart.js mood timeline
+    chart_sessions = sessions.order_by('created_at')
+    chart_data = json.dumps([
+        {
+            'date':    s.created_at.strftime('%d %b %Y, %H:%M'),
+            'score':   round(s.score, 2),
+            'mood':    s.mood_tag,
+            'snippet': (s.user_input[:55] + '…') if len(s.user_input) > 55 else s.user_input,
+        }
+        for s in chart_sessions
+    ])
+
+    # Top liked artists (from 👍 feedback)
+    from django.db.models import Q
+    liked_artists = (
+        TrackFeedback.objects
+        .filter(user=request.user, liked=True)
+        .values('recommendation__artist_name')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:3]
+    )
+
+    # User genre preferences — resolve IDs to display labels
+    prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
+    genre_label_map = {g['id']: g['label'] for g in AVAILABLE_GENRES}
+    liked_genres = [genre_label_map.get(gid, gid) for gid in (prefs.genres or [])]
+
     context = {
         'total_sessions': total_sessions,
-        'dominant_mood': dominant_mood,
-        'distribution': distribution,
+        'dominant_mood':  dominant_mood,
+        'distribution':   distribution,
+        'chart_data':     chart_data,
+        'liked_artists':  liked_artists,
+        'liked_genres':   liked_genres,
     }
-    
+
     return render(request, 'mood/profile.html', context)
+
+
+# ---------------------------------------------------------------------------
+# Sound-alike discovery views
+# ---------------------------------------------------------------------------
+
+@login_required
+def search_view(request):
+    """Render the song search / sound-alike discovery page."""
+    return render(request, 'mood/search.html')
+
+
+@login_required
+def track_suggest_ajax(request):
+    """AJAX autocomplete: return JSON list of tracks matching the query."""
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return JsonResponse([], safe=False)
+    results = search_lastfm_track(q)
+    return JsonResponse(results, safe=False)
+
+
+@login_required
+def similar_tracks_ajax(request):
+    """AJAX: given track + artist, return JSON list of similar tracks with Spotify links."""
+    track  = request.GET.get('track',  '').strip()
+    artist = request.GET.get('artist', '').strip()
+    if not track or not artist:
+        return JsonResponse({'error': 'Parametri lipsă.'}, status=400)
+    tracks = get_similar_tracks(track, artist)
+    return JsonResponse(tracks, safe=False)
+
+
+# ---------------------------------------------------------------------------
+# Genre Preferences
+# ---------------------------------------------------------------------------
+
+@login_required
+def preferences_view(request):
+    prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
+    valid_ids = {g['id'] for g in AVAILABLE_GENRES}
+
+    if request.method == 'POST':
+        selected = request.POST.getlist('genres')
+        prefs.genres = [g for g in selected if g in valid_ids]
+        prefs.save()
+        messages.success(request, 'Preferințele muzicale au fost salvate! 🎵')
+        return redirect('preferences')
+
+    return render(request, 'mood/preferences.html', {
+        'prefs':            prefs,
+        'available_genres': AVAILABLE_GENRES,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Delete Account
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_POST
+def delete_account_view(request):
+    password = request.POST.get('password', '')
+    user     = request.user
+
+    if not user.check_password(password):
+        messages.error(request, 'Parolă incorectă. Contul nu a fost șters.')
+        return redirect('profile')
+
+    # Cascade deletes all related data automatically
+    logout(request)
+    user.delete()
+    return render(request, 'mood/account_deleted.html')

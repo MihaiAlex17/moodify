@@ -173,3 +173,102 @@ def get_spotify_link(token: str, track: str, artist: str) -> str:
         return items[0]["external_urls"]["spotify"] if items else ""
     except Exception:
         return ""
+
+
+def search_lastfm_track(query: str) -> list:
+    """Autocomplete: search Last.fm for tracks matching `query`. Returns up to 8 results."""
+    url = "https://ws.audioscrobbler.com/2.0/"
+    params = {
+        "method":  "track.search",
+        "track":   query,
+        "api_key": LASTFM_API_KEY,
+        "format":  "json",
+        "limit":   8,
+    }
+    try:
+        data    = requests.get(url, params=params, timeout=8).json()
+        matches = data.get("results", {}).get("trackmatches", {}).get("track", [])
+        if isinstance(matches, dict):
+            matches = [matches]
+        return [{"name": t.get("name", ""), "artist": t.get("artist", "")} for t in matches]
+    except Exception:
+        return []
+
+
+def get_similar_tracks(track: str, artist: str) -> list:
+    """
+    Fetch up to 8 similar tracks via Last.fm track.getSimilar.
+    Falls back to the artist's top tracks if getSimilar returns too few results
+    (common for regional/niche artists like Romanian pop).
+    """
+    url = "https://ws.audioscrobbler.com/2.0/"
+    token = get_spotify_token()
+
+    def _resolve(raw_tracks, limit=8) -> list:
+        """Turn a raw Last.fm track list into our result format."""
+        results = []
+        for i, t in enumerate(raw_tracks[:limit], 1):
+            name = t.get("name", "")
+            art  = (
+                t.get("artist", {}).get("name", "")
+                if isinstance(t.get("artist"), dict)
+                else t.get("artist", "")
+            )
+            sp_url = get_spotify_link(token, name, art)
+            results.append({
+                "rank":        i,
+                "track_name":  name,
+                "artist_name": art,
+                "spotify_url": sp_url,
+                "is_fallback": False,
+            })
+        return results
+
+    # ── Step 1: try track.getSimilar ──
+    try:
+        params = {
+            "method":      "track.getSimilar",
+            "track":       track,
+            "artist":      artist,
+            "api_key":     LASTFM_API_KEY,
+            "format":      "json",
+            "limit":       10,
+            "autocorrect": 1,
+        }
+        data   = requests.get(url, params=params, timeout=10).json()
+        tracks = data.get("similartracks", {}).get("track", [])
+        if isinstance(tracks, dict):
+            tracks = [tracks]
+
+        if len(tracks) >= 3:
+            return _resolve(tracks)
+    except Exception:
+        tracks = []
+
+    # ── Step 2: fallback — artist's other top tracks ──
+    try:
+        params = {
+            "method":      "artist.getTopTracks",
+            "artist":      artist,
+            "api_key":     LASTFM_API_KEY,
+            "format":      "json",
+            "limit":       20,
+            "autocorrect": 1,
+        }
+        data        = requests.get(url, params=params, timeout=10).json()
+        top_tracks  = data.get("toptracks", {}).get("track", [])
+        if isinstance(top_tracks, dict):
+            top_tracks = [top_tracks]
+
+        # Remove the seed track itself
+        seed_lower  = track.lower()
+        filtered    = [t for t in top_tracks if t.get("name", "").lower() != seed_lower]
+
+        result = _resolve(filtered, limit=8)
+        # Mark as fallback so the UI can say "alte piese de la artist"
+        for r in result:
+            r["is_fallback"] = True
+        return result
+    except Exception:
+        return []
+

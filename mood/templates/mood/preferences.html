@@ -1,0 +1,247 @@
+{% extends "mood/base.html" %}
+{% block title %}Preferințe Muzicale — Moodify{% endblock %}
+
+{% block extra_css %}
+<style>
+  .pref-header { margin-bottom: 2rem; }
+  .pref-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .pref-header p  { color: var(--muted); }
+
+  /* ── Search bar ── */
+  .genre-search-wrap { position: relative; max-width: 380px; margin-bottom: 1.6rem; }
+  .genre-search-icon { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  #genre-search {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.65rem 1rem 0.65rem 2.4rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #genre-search:focus { border-color: var(--p2); box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+  #genre-search::placeholder { color: var(--muted); }
+
+  /* ── Toolbar ── */
+  .genre-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.6rem;
+  }
+  .selected-count {
+    font-size: 0.88rem; color: var(--muted);
+  }
+  .selected-count strong { color: var(--p3); }
+  .clear-btn {
+    font-size: 0.82rem; color: var(--muted); background: none; border: none;
+    cursor: pointer; text-decoration: underline; padding: 0;
+    font-family: 'Outfit', sans-serif;
+    transition: color 0.2s;
+  }
+  .clear-btn:hover { color: #f87171; }
+
+  /* ── Genre grid ── */
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .genre-card {
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 0.8rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .genre-card:hover {
+    background: rgba(168,85,247,0.08);
+    border-color: rgba(168,85,247,0.35);
+    transform: translateY(-2px);
+  }
+  .genre-card.selected {
+    background: rgba(168,85,247,0.18);
+    border-color: var(--p2);
+    box-shadow: 0 0 12px rgba(168,85,247,0.25);
+  }
+  .genre-card.hidden { display: none; }
+
+  .genre-emoji { font-size: 1.6rem; line-height: 1; }
+  .genre-name  { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+  .genre-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .genre-card.selected .genre-check {
+    background: var(--p2);
+    border-color: var(--p2);
+    color: #fff;
+  }
+
+  /* hidden real checkboxes */
+  .genre-hidden-input { display: none; }
+
+  /* ── No results ── */
+  #genre-empty {
+    display: none; text-align: center; padding: 2rem;
+    color: var(--muted); font-size: 0.9rem;
+  }
+
+  /* ── Save bar ── */
+  .save-bar {
+    position: sticky; bottom: 0;
+    background: rgba(10,10,18,0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+    padding: 1rem 0;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+    margin: 0 -1.5rem -2.5rem;
+    padding: 1rem 1.5rem;
+  }
+  .save-hint { font-size: 0.85rem; color: var(--muted); }
+  .save-hint strong { color: var(--p3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pref-header fade-up">
+  <h1>Preferințe Muzicale 🎛️</h1>
+  <p>Alege genurile tale preferate. Le vom folosi când nu scriei explicit despre muzică.</p>
+</div>
+
+{% if messages %}
+<div style="margin-bottom:1rem;">
+  {% for msg in messages %}
+  <div class="message {{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="pref-form">
+  {% csrf_token %}
+
+  <!-- Search -->
+  <div class="genre-search-wrap fade-up" style="animation-delay:60ms;">
+    <span class="genre-search-icon">🔍</span>
+    <input id="genre-search" type="text" placeholder="Caută gen muzical…" autocomplete="off">
+  </div>
+
+  <!-- Toolbar -->
+  <div class="genre-toolbar fade-up" style="animation-delay:100ms;">
+    <span class="selected-count">
+      <strong id="sel-count">{{ prefs.genres|length }}</strong> genuri selectate
+    </span>
+    <button type="button" class="clear-btn" onclick="clearAll()">Deselectează tot</button>
+  </div>
+
+  <!-- Grid -->
+  <div class="genre-grid fade-up" style="animation-delay:140ms;" id="genre-grid">
+    {% for g in available_genres %}
+    <div
+      class="genre-card {% if g.id in prefs.genres %}selected{% endif %}"
+      id="card-{{ g.id }}"
+      onclick="toggleGenre('{{ g.id }}')"
+      data-label="{{ g.label|lower }}"
+    >
+      <span class="genre-emoji">{{ g.emoji }}</span>
+      <span class="genre-name">{{ g.label }}</span>
+      <span class="genre-check">{% if g.id in prefs.genres %}✓{% endif %}</span>
+      <input
+        class="genre-hidden-input"
+        type="checkbox"
+        name="genres"
+        value="{{ g.id }}"
+        id="chk-{{ g.id }}"
+        {% if g.id in prefs.genres %}checked{% endif %}
+      >
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="genre-empty">Niciun gen găsit pentru această căutare.</div>
+
+  <!-- Sticky save bar -->
+  <div class="save-bar">
+    <span class="save-hint">
+      <strong id="sel-count-bar">{{ prefs.genres|length }}</strong> genuri selectate
+      {% if prefs.genres %} — vor fi folosite ca fallback la recomandări{% endif %}
+    </span>
+    <div style="display:flex; gap:0.8rem; align-items:center;">
+      <a href="/profile/" class="btn btn-secondary">Înapoi</a>
+      <button type="submit" class="btn btn-primary">💾 Salvează</button>
+    </div>
+  </div>
+</form>
+
+<script>
+(function () {
+  const searchInput = document.getElementById('genre-search');
+  const selCountEl  = document.getElementById('sel-count');
+  const selCountBar = document.getElementById('sel-count-bar');
+  const emptyEl     = document.getElementById('genre-empty');
+
+  function getSelected() {
+    return document.querySelectorAll('.genre-hidden-input:checked').length;
+  }
+
+  function updateCount() {
+    const n = getSelected();
+    selCountEl.textContent  = n;
+    selCountBar.textContent = n;
+  }
+
+  window.toggleGenre = function (id) {
+    const card = document.getElementById('card-' + id);
+    const chk  = document.getElementById('chk-' + id);
+    const mark = card.querySelector('.genre-check');
+
+    chk.checked = !chk.checked;
+    card.classList.toggle('selected', chk.checked);
+    mark.textContent = chk.checked ? '✓' : '';
+    updateCount();
+  };
+
+  window.clearAll = function () {
+    document.querySelectorAll('.genre-card.selected').forEach(card => {
+      const id = card.id.replace('card-', '');
+      const chk  = document.getElementById('chk-' + id);
+      const mark = card.querySelector('.genre-check');
+      chk.checked = false;
+      card.classList.remove('selected');
+      mark.textContent = '';
+    });
+    updateCount();
+  };
+
+  // Live search filter
+  searchInput.addEventListener('input', () => {
+    const q     = searchInput.value.trim().toLowerCase();
+    const cards = document.querySelectorAll('.genre-card');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const match = !q || card.dataset.label.includes(q);
+      card.classList.toggle('hidden', !match);
+      if (match) visible++;
+    });
+
+    emptyEl.style.display = (visible === 0) ? 'block' : 'none';
+  });
+})();
+</script>
+{% endblock %}
