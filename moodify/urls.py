@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('mood.urls')),
 
-    # ── Password reset flow (Django built-in) ──────────────────────────────
+    # fluxul de resetare parola folosind view-urile built-in Django
     path('password-reset/',
          auth_views.PasswordResetView.as_view(
              template_name='mood/password_reset.html',
@@ -16,12 +16,14 @@ urlpatterns = [
          ),
          name='password_reset'),
 
+    # pagina afisata dupa trimiterea email-ului de resetare
     path('password-reset/done/',
          auth_views.PasswordResetDoneView.as_view(
              template_name='mood/password_reset_done.html',
          ),
          name='password_reset_done'),
 
+    # link-ul din email - verifica token-ul si afiseaza formularul
     path('password-reset-confirm/<uidb64>/<token>/',
          CustomPasswordResetConfirmView.as_view(),
          name='password_reset_confirm'),

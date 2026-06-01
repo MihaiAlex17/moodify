@@ -1,11 +1,18 @@
+import os
 import random
 import requests
 import base64
+from pathlib import Path
+from dotenv import load_dotenv
 
-LASTFM_API_KEY = "95711c703010c8da32826ad534adc6b8"
-SPOTIFY_ID     = "1ca7f51e164b48e2bb2107c20bf915fd"
-SPOTIFY_SECRET = "5ccf48475bcc48f4b449c9fe140f3dd7"
+# incarcam variabilele din .env (acelasi fisier ca Django)
+load_dotenv(Path(__file__).resolve().parent / '.env')
 
+LASTFM_API_KEY = os.environ['LASTFM_API_KEY']
+SPOTIFY_ID     = os.environ['SPOTIFY_CLIENT_ID']
+SPOTIFY_SECRET = os.environ['SPOTIFY_CLIENT_SECRET']
+
+# mapeaza tag-ul intern la termenul de cautare pe Last.fm
 TAG_MAP = {
     "sad":      "sad songs",
     "chillout": "chillout",
@@ -16,8 +23,10 @@ TAG_MAP = {
 def get_lastfm_tracks(tag: str, context: str = None, excluded: set = None) -> list:
     if excluded is None:
         excluded = set()
-        
+
     base_tag = TAG_MAP.get(tag, tag)
+
+    # combinam starea cu contextul muzical daca exista (ex: "sad rock")
     if context:
         if tag == 'sad':
             query_tag = f"sad {context}"
@@ -29,42 +38,41 @@ def get_lastfm_tracks(tag: str, context: str = None, excluded: set = None) -> li
             query_tag = context
     else:
         query_tag = base_tag
-        
+
     url    = "https://ws.audioscrobbler.com/2.0/"
     params = {
         "method":      "tag.gettoptracks",
         "tag":         query_tag,
         "api_key":     LASTFM_API_KEY,
         "format":      "json",
-        "limit":       300,  # Fetch a huge pool
+        "limit":       300,
         "autocorrect": 1,
     }
     try:
         data   = requests.get(url, params=params, timeout=10).json()
         tracks = data.get("tracks", {}).get("track", [])
-        
-        # If combined tag (e.g., "sad rock") returns nothing, fallback to just the mood ("sad songs")
+
+        # daca tag-ul combinat nu returneaza nimic, incercam doar starea
         if not tracks and context:
             params["tag"] = base_tag
             tracks = requests.get(url, params=params, timeout=10).json().get("tracks", {}).get("track", [])
-            
+
+        # fallback la pop daca tot nu gasim nimic
         if not tracks:
             params["tag"] = "pop"
             tracks = requests.get(url, params=params, timeout=10).json().get("tracks", {}).get("track", [])
         if isinstance(tracks, dict):
             tracks = [tracks]
-            
-        # Filter out tracks the user has already received
+
+        # eliminam piesele pe care utilizatorul le-a mai primit
         fresh_tracks = [t for t in tracks if t.get("name") not in excluded]
-        
-        # Fallback just in case they somehow exhausted all 300 top tracks
+
+        # daca a primit deja toate piesele, ignoram excluderea
         if len(fresh_tracks) < 5:
             fresh_tracks = tracks
-            
-        # Limit to the top 20 most popular fresh tracks to guarantee we don't pick obscure/weird songs
+
+        # luam primele 20 cele mai populare si alegem 5 aleatoriu
         popular_fresh_pool = fresh_tracks[:20]
-            
-        # Shuffle and pick 5 random completely fresh tracks from the popular pool
         return random.sample(popular_fresh_pool, min(5, len(popular_fresh_pool)))
     except Exception:
         return []
@@ -73,79 +81,78 @@ def get_lastfm_tracks(tag: str, context: str = None, excluded: set = None) -> li
 from concurrent.futures import ThreadPoolExecutor
 
 def _check_track_mood(track: dict, expected_mood: str) -> dict:
-    """Helper function to fetch tags for a single track and check if it matches the mood."""
+    """Verifica daca o piesa are tag-ul de stare asteptat pe Last.fm."""
     try:
         url = "https://ws.audioscrobbler.com/2.0/"
         params = {
-            "method": "track.getInfo",
-            "artist": track["artist"]["name"],
-            "track": track["name"],
-            "api_key": LASTFM_API_KEY,
-            "format": "json",
+            "method":      "track.getInfo",
+            "artist":      track["artist"]["name"],
+            "track":       track["name"],
+            "api_key":     LASTFM_API_KEY,
+            "format":      "json",
             "autocorrect": 1
         }
-        data = requests.get(url, params=params, timeout=5).json()
+        data      = requests.get(url, params=params, timeout=5).json()
         tags_data = data.get("track", {}).get("toptags", {}).get("tag", [])
         if isinstance(tags_data, dict):
             tags_data = [tags_data]
-            
-        tags = [t.get("name", "").lower() for t in tags_data]
-        
-        # Check if the expected mood tag is in the track's tags
+
+        tags   = [t.get("name", "").lower() for t in tags_data]
         target = TAG_MAP.get(expected_mood, expected_mood)
+
+        # returnam piesa daca starea se regaseste in tag-urile ei
         if any(target in t for t in tags) or any(expected_mood in t for t in tags):
             return track
     except Exception:
         pass
     return None
 
+
 def get_artist_tracks_by_mood(artist: str, mood_tag: str, excluded: set = None) -> list:
-    """Fetches top tracks by an artist and filters them by mood (Option B)."""
+    """Returneaza piese ale unui artist filtrate dupa starea curenta."""
     if excluded is None:
         excluded = set()
-        
-    url = "https://ws.audioscrobbler.com/2.0/"
+
+    url    = "https://ws.audioscrobbler.com/2.0/"
     params = {
-        "method": "artist.getTopTracks",
-        "artist": artist,
-        "api_key": LASTFM_API_KEY,
-        "format": "json",
-        "limit": 50,  # Fetch top 50 to have enough to filter
+        "method":      "artist.getTopTracks",
+        "artist":      artist,
+        "api_key":     LASTFM_API_KEY,
+        "format":      "json",
+        "limit":       50,
         "autocorrect": 1,
     }
     try:
-        data = requests.get(url, params=params, timeout=10).json()
+        data   = requests.get(url, params=params, timeout=10).json()
         tracks = data.get("toptracks", {}).get("track", [])
         if isinstance(tracks, dict):
             tracks = [tracks]
-            
-        # Filter out previously received tracks
+
         fresh_tracks = [t for t in tracks if t.get("name") not in excluded]
-        
+
+        # verificam tag-urile fiecarei piese in paralel pentru viteza
         matched_tracks = []
-        # Use ThreadPoolExecutor to check tags for all fresh tracks concurrently (lightning fast)
         with ThreadPoolExecutor(max_workers=10) as executor:
-            # Map the helper function over the fresh tracks
             futures = [executor.submit(_check_track_mood, t, mood_tag) for t in fresh_tracks]
             for future in futures:
                 result = future.result()
                 if result:
                     matched_tracks.append(result)
-                    # Once we find 10 matches, we can stop to save time, we only need 5
+                    # ne oprim dupa 10 rezultate, avem nevoie doar de 5
                     if len(matched_tracks) >= 10:
                         break
-                        
-        # If we didn't find enough matched tracks (e.g., no sad songs by this artist),
-        # fallback to their top fresh tracks generally so we don't return an empty page.
+
+        # daca nu gasim suficiente piese cu starea potrivita, luam top-ul general
         if len(matched_tracks) < 5:
             return random.sample(fresh_tracks, min(5, len(fresh_tracks)))
-            
+
         return random.sample(matched_tracks, min(5, len(matched_tracks)))
     except Exception:
         return []
 
 
 def get_spotify_token() -> str:
+    """Obtine un token de acces Spotify prin client credentials flow."""
     auth_b64 = base64.b64encode(f"{SPOTIFY_ID}:{SPOTIFY_SECRET}".encode()).decode()
     try:
         res = requests.post(
@@ -160,6 +167,7 @@ def get_spotify_token() -> str:
 
 
 def get_spotify_link(token: str, track: str, artist: str) -> str:
+    """Cauta o piesa pe Spotify si returneaza URL-ul sau string gol daca nu o gaseste."""
     if not token:
         return ""
     try:
@@ -176,8 +184,8 @@ def get_spotify_link(token: str, track: str, artist: str) -> str:
 
 
 def search_lastfm_track(query: str) -> list:
-    """Autocomplete: search Last.fm for tracks matching `query`. Returns up to 8 results."""
-    url = "https://ws.audioscrobbler.com/2.0/"
+    """Cauta piese pe Last.fm dupa un text partial. Folosit pentru autocomplete."""
+    url    = "https://ws.audioscrobbler.com/2.0/"
     params = {
         "method":  "track.search",
         "track":   query,
@@ -197,15 +205,14 @@ def search_lastfm_track(query: str) -> list:
 
 def get_similar_tracks(track: str, artist: str) -> list:
     """
-    Fetch up to 8 similar tracks via Last.fm track.getSimilar.
-    Falls back to the artist's top tracks if getSimilar returns too few results
-    (common for regional/niche artists like Romanian pop).
+    Returneaza pana la 8 piese similare folosind Last.fm track.getSimilar.
+    Daca nu gaseste destule, cade pe top-ul artistului ca fallback.
     """
-    url = "https://ws.audioscrobbler.com/2.0/"
+    url   = "https://ws.audioscrobbler.com/2.0/"
     token = get_spotify_token()
 
     def _resolve(raw_tracks, limit=8) -> list:
-        """Turn a raw Last.fm track list into our result format."""
+        """Transforma lista bruta Last.fm in formatul nostru de raspuns."""
         results = []
         for i, t in enumerate(raw_tracks[:limit], 1):
             name = t.get("name", "")
@@ -224,7 +231,7 @@ def get_similar_tracks(track: str, artist: str) -> list:
             })
         return results
 
-    # ── Step 1: try track.getSimilar ──
+    # incercam mai intai track.getSimilar
     try:
         params = {
             "method":      "track.getSimilar",
@@ -245,7 +252,7 @@ def get_similar_tracks(track: str, artist: str) -> list:
     except Exception:
         tracks = []
 
-    # ── Step 2: fallback — artist's other top tracks ──
+    # fallback: alte piese ale aceluiasi artist
     try:
         params = {
             "method":      "artist.getTopTracks",
@@ -255,20 +262,19 @@ def get_similar_tracks(track: str, artist: str) -> list:
             "limit":       20,
             "autocorrect": 1,
         }
-        data        = requests.get(url, params=params, timeout=10).json()
-        top_tracks  = data.get("toptracks", {}).get("track", [])
+        data       = requests.get(url, params=params, timeout=10).json()
+        top_tracks = data.get("toptracks", {}).get("track", [])
         if isinstance(top_tracks, dict):
             top_tracks = [top_tracks]
 
-        # Remove the seed track itself
-        seed_lower  = track.lower()
-        filtered    = [t for t in top_tracks if t.get("name", "").lower() != seed_lower]
+        # scoatem piesa de start din lista
+        seed_lower = track.lower()
+        filtered   = [t for t in top_tracks if t.get("name", "").lower() != seed_lower]
 
         result = _resolve(filtered, limit=8)
-        # Mark as fallback so the UI can say "alte piese de la artist"
+        # marcam ca fallback ca sa afisam un mesaj diferit in UI
         for r in result:
             r["is_fallback"] = True
         return result
     except Exception:
         return []
-

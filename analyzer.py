@@ -1,11 +1,10 @@
 from transformers import pipeline, AutoTokenizer
 
-print("Incarc creierul AI...")
+print("Incarc modelul AI...")
 
-# Model XLM-RoBERTa antrenat pe inferenta lingvistica naturala (NLI / XNLI)
-# Intelege propozitii intregi in romana, inclusiv negatii si context
-# use_fast=False forteaza tokenizer-ul lent (pur Python / SentencePiece)
-# evitand dependinta de protobuf pe care tokenizer-ul rapid o cere
+# model XLM-RoBERTa antrenat pe clasificare zero-shot (XNLI)
+# intelege texte in romana, inclusiv negatii si context
+# use_fast=False evita dependinta de protobuf necesara pentru tokenizer-ul rapid
 _tokenizer = AutoTokenizer.from_pretrained(
     "joeddav/xlm-roberta-large-xnli",
     use_fast=False
@@ -16,8 +15,8 @@ classifier = pipeline(
     tokenizer=_tokenizer
 )
 
-# Etichete de stare in romana — modelul calculeaza probabilitatile pentru fiecare
-# Valorile de valenta sunt ancorele fixe pe scala 0.1 → 0.9
+# etichete de stare folosite la clasificare
+# fiecare eticheta are o valoare fixa de valenta pe scala 0.1 - 0.9
 MOOD_LABELS = [
     "extrem de trist",
     "trist",
@@ -36,15 +35,12 @@ VALENCE_ANCHORS = {
 
 def get_sentiment_score(text: str) -> float:
     """
-    Returneaza un scor de valenta intre 0.1 (foarte trist) si 0.9 (foarte fericit).
-
-    Foloseste clasificare zero-shot: modelul primeste textul si etichetele de stare,
-    si calculeaza o distributie de probabilitate peste ele.
-    Scorul final este media ponderata a ancorelor de valenta.
+    Returneaza un scor de valenta intre 0.1 (trist) si 0.9 (fericit).
+    Scorul este media ponderata a ancorelor inmultite cu probabilitatile date de model.
     """
     result = classifier(text, candidate_labels=MOOD_LABELS)
 
-    # result["labels"] si result["scores"] sunt sortate descrescator dupa scor
+    # calculam media ponderata: suma(probabilitate * valenta)
     score = sum(
         prob * VALENCE_ANCHORS[label]
         for label, prob in zip(result["labels"], result["scores"])
@@ -52,40 +48,41 @@ def get_sentiment_score(text: str) -> float:
 
     return round(score, 2)
 
-# Etichete de context/gen (vom alege cel mult unul daca are scor mare)
+
+# etichete de gen/context muzical folosite pentru a detecta preferinta din text
 GENRE_LABELS = [
-    "rock", "pop", "hip hop", "jazz", "electronic", "clasică", "lo-fi", 
+    "rock", "pop", "hip hop", "jazz", "electronic", "clasica", "lo-fi",
     "acustic", "metal", "relaxare", "sport", "petrecere", "somn"
 ]
 
 def get_context_tag(text: str) -> str:
     """
-    Extrage un posibil context sau gen muzical din text folosind zero-shot classification (multi_label=True).
-    Returneaza un string (ex: 'rock') sau None daca nu detecteaza nimic clar.
+    Incearca sa detecteze un gen muzical din textul utilizatorului.
+    Returneaza un string (ex: 'rock') sau None daca nu e sigur.
     """
-    # multi_label=True trateaza fiecare eticheta independent (probabilitati 0-1)
+    # multi_label=True evalueaza fiecare eticheta independent, nu intre ele
     result = classifier(text, candidate_labels=GENRE_LABELS, multi_label=True)
-    
+
     best_label = result["labels"][0]
     best_score = result["scores"][0]
-    
-    # Daca probabilitatea este mai mare de 40%, presupunem ca e un context valid
+
+    # acceptam eticheta doar daca probabilitatea depaseste 40%
     if best_score >= 0.40:
-        # Traducem in engleza pentru cautarea pe Last.fm, daca e cazul
+        # traducere in engleza pentru cautarea pe Last.fm
         translations = {
-            "clasică": "classical",
-            "acustic": "acoustic",
-            "relaxare": "relaxing",
-            "sport": "workout",
+            "clasica":   "classical",
+            "acustic":   "acoustic",
+            "relaxare":  "relaxing",
+            "sport":     "workout",
             "petrecere": "party",
-            "somn": "sleep",
+            "somn":      "sleep",
         }
         return translations.get(best_label, best_label)
-        
+
     return None
 
 
-# --- Test rapid la import (comenteaza daca nu vrei output la import) ---
+# bloc de test rulat doar direct (python analyzer.py), nu la import
 if __name__ == "__main__":
     test_phrases = [
         ("ma simt oribil, totul merge prost", "SAD"),
@@ -106,5 +103,5 @@ if __name__ == "__main__":
             detected = "CHILL"
         else:
             detected = "HAPPY"
-        ok = "✓" if detected == expected else "✗"
+        ok = "OK" if detected == expected else "GRESIT"
         print(f"{ok} [{scor:.2f}] {detected:5s} | '{phrase}'")

@@ -3,214 +3,148 @@
 
 {% block extra_css %}
 <style>
-  /* ── Page header ── */
-  .profile-header { margin-bottom: 2rem; }
-  .profile-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.3rem; }
-  .profile-header p  { color: var(--muted); }
-
-  /* ── Layout ── */
   .profile-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
-  @media (min-width: 768px) {
+  @media (min-width: 640px) {
     .profile-grid { grid-template-columns: 1fr 1fr; }
   }
 
-  /* ── Chart card ── */
-  .chart-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.8rem 1.8rem 1.4rem;
-    box-shadow: var(--shadow);
-    margin-bottom: 1.5rem;
-  }
-  .chart-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.2rem;
-    flex-wrap: wrap;
-    gap: 0.8rem;
-  }
-  .chart-title {
-    font-size: 1.15rem;
+  .card-title {
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--text);
-  }
-  .chart-legend {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
-  .legend-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .chart-wrap { position: relative; height: 260px; }
-  .chart-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 200px;
-    color: var(--muted);
-    font-size: 0.95rem;
-    gap: 0.6rem;
-  }
-  .chart-empty span { font-size: 2.5rem; }
-
-  /* ── Account / stats cards ── */
-  .card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
     margin-bottom: 1rem;
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
     padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
+
   .info-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 0.8rem;
-    padding-bottom: 0.8rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f0f0ec;
+    font-size: 0.9rem;
   }
-  .info-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-  .info-label { color: var(--muted); font-size: 0.95rem; }
-  .info-value  { font-weight: 500; }
+  .info-row:last-of-type { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .info-label { color: var(--muted); }
+  .info-value { font-weight: 500; text-align: right; }
 
-  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.4rem; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
   .stat-card {
-    background: rgba(255,255,255,0.03);
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.1rem;
+    border-radius: var(--radius);
+    padding: 0.9rem;
     text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   }
-  .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    border-color: rgba(168,85,247,0.35);
+  .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); margin-bottom: 0.2rem; line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .chart-section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
   }
-  .stat-value {
-    font-size: 2rem;
+  .chart-section-title {
+    font-size: 0.95rem;
     font-weight: 700;
-    color: var(--p2);
-    margin-bottom: 0.25rem;
-    line-height: 1;
-  }
-  .stat-label {
-    font-size: 0.78rem;
-    color: var(--muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
   }
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.75rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-  .dist-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.6rem;
-  }
-  .dist-bar-wrap { flex: 1; margin: 0 0.8rem; height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
-  .dist-bar { height: 100%; border-radius: 999px; transition: width 0.8s ease; }
-  .dist-count { font-weight: 600; font-size: 0.82rem; color: var(--muted); min-width: 24px; text-align: right; }
+  .dist-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; font-size: 0.88rem; }
+  .dist-bar-wrap { flex: 1; height: 6px; background: #ebebeb; border-radius: 3px; overflow: hidden; }
+  .dist-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .dist-count { font-size: 0.8rem; color: var(--muted); min-width: 20px; text-align: right; }
 
-  /* ── Danger zone ── */
-  .btn-danger {
-    background: rgba(248,113,113,0.1);
-    color: #f87171;
-    border: 1px solid rgba(248,113,113,0.3);
-    font-size: 0.88rem;
-    padding: 0.5rem 1.1rem;
-  }
-  .btn-danger:hover { background: rgba(248,113,113,0.2); border-color: #f87171; }
-
-  /* ── Genre chips preview ── */
-  .genre-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+  .genre-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
   .genre-chip {
-    font-size: 0.75rem; padding: 0.2rem 0.6rem;
-    background: rgba(168,85,247,0.12);
-    border: 1px solid rgba(168,85,247,0.3);
-    border-radius: 999px; color: var(--p3);
+    font-size: 0.78rem; padding: 0.2rem 0.55rem;
+    background: #eef6f1; border: 1px solid #b8d8c8;
+    border-radius: 4px; color: var(--accent);
   }
 
-  /* ── Modal overlay ── */
+  .section-label {
+    font-size: 0.78rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.04em; margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 600;
+  }
+
+  .btn-danger {
+    background: var(--white);
+    color: var(--error);
+    border: 1px solid #e8c0bb;
+    font-size: 0.88rem;
+  }
+  .btn-danger:hover { background: #fdf2f0; }
+
+  /* Delete modal */
   .modal-overlay {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.65);
-    backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.4);
     z-index: 9000;
     align-items: center;
     justify-content: center;
   }
   .modal-overlay.open { display: flex; }
   .modal-box {
-    background: #1c1c2e;
-    border: 1px solid rgba(248,113,113,0.3);
-    border-radius: 16px;
-    padding: 2rem;
-    max-width: 400px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    max-width: 380px;
     width: 90%;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-    animation: fadeUp 0.25s ease both;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
   }
-  .modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
-  .modal-body  { color: var(--muted); font-size: 0.92rem; margin-bottom: 1.4rem; line-height: 1.5; }
-  .modal-actions { display: flex; gap: 0.8rem; justify-content: flex-end; }
+  .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .modal-body  { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.55; }
+  .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="profile-header fade-up">
-  <h1>Profilul meu 👤</h1>
-  <p>Statistici și evoluția stării tale de-a lungul timpului.</p>
+<div style="margin-bottom:1.5rem;">
+  <div class="page-title">Profilul meu</div>
+  <div class="page-subtitle">Statistici și evoluția stării tale de-a lungul timpului.</div>
 </div>
 
-<!-- ── Mood Timeline Chart ── -->
-<div class="chart-card fade-up" style="animation-delay:80ms;">
-  <div class="chart-header">
-    <span class="chart-title">📈 Evoluția Dispoziției</span>
-    <div class="chart-legend">
-      <span class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span>Trist</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#a855f7;"></span>Chill</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span>Fericit</span>
-    </div>
-  </div>
-
-  {% if total_sessions > 0 %}
+{% if total_sessions > 0 %}
+<!-- Mood Timeline Chart -->
+<div class="chart-section">
+  <div class="chart-section-title">Evoluția dispoziției</div>
   <div class="chart-wrap">
     <canvas id="moodChart"></canvas>
   </div>
-  {% else %}
-  <div class="chart-empty">
-    <span>🎵</span>
-    <p>Fă prima sesiune pentru a vedea graficul evoluției tale!</p>
-    <a class="btn btn-primary" href="/" style="margin-top:0.4rem;">Începe acum</a>
+  <div class="chart-legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#2980b9;"></span>Trist</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#8e44ad;"></span>Chill</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#e67e22;"></span>Fericit</span>
   </div>
-  {% endif %}
 </div>
+{% endif %}
 
-<!-- ── Stats Grid ── -->
 <div class="profile-grid">
 
   <!-- Account Info -->
-  <div class="card fade-up" style="animation-delay:160ms;">
-    <h2 class="card-title">Detalii Cont</h2>
+  <div class="card">
+    <div class="card-title">Detalii cont</div>
     <div class="info-row">
       <span class="info-label">Username</span>
       <span class="info-value">{{ user.username }}</span>
@@ -223,62 +157,62 @@
       <span class="info-label">Membru din</span>
       <span class="info-value">{{ user.date_joined|date:"d M Y" }}</span>
     </div>
-
-    <!-- Genre preferences summary -->
-    <div class="info-row" style="flex-direction:column; align-items:flex-start; gap:0.5rem;">
-      <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+    <div class="info-row" style="flex-direction:column; align-items:flex-start;">
+      <div style="display:flex; justify-content:space-between; width:100%;">
         <span class="info-label">Genuri preferate</span>
-        <a href="/preferences/" style="font-size:0.82rem; color:var(--p3); text-decoration:none;">Editează →</a>
+        <a href="/preferences/" style="font-size:0.82rem; color:var(--accent); text-decoration:none;">Editează →</a>
       </div>
       {% if liked_genres %}
-      <div class="genre-chips">
+      <div class="genre-chips" style="margin-top:0.4rem;">
         {% for g in liked_genres %}<span class="genre-chip">{{ g }}</span>{% endfor %}
       </div>
       {% else %}
-      <span style="font-size:0.82rem; color:var(--muted);">Niciunul setat — <a href="/preferences/" style="color:var(--p3);">adaugă acum</a></span>
+      <span style="font-size:0.82rem; color:var(--muted); margin-top:0.3rem;">
+        Niciunul — <a href="/preferences/" style="color:var(--accent);">adaugă acum</a>
+      </span>
       {% endif %}
     </div>
 
-    <div style="display:flex; gap:0.6rem; margin-top:1.2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top:1.2rem; flex-wrap:wrap;">
+    <div style="display:flex; gap:0.5rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); flex-wrap:wrap;">
       <a class="btn btn-secondary" href="/password-reset/">Schimbă parola</a>
       <button class="btn btn-danger" onclick="document.getElementById('delete-modal').classList.add('open')" type="button">
-        🗑 Șterge cont
+        Șterge cont
       </button>
     </div>
   </div>
 
   <!-- Stats -->
-  <div class="card fade-up" style="animation-delay:240ms;">
-    <h2 class="card-title">Statistici Moodify</h2>
+  <div class="card">
+    <div class="card-title">Statistici</div>
 
     <div class="stat-grid">
       <div class="stat-card">
         <div class="stat-value">{{ total_sessions }}</div>
-        <div class="stat-label">Sesiuni Totale</div>
+        <div class="stat-label">Sesiuni totale</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value" style="font-size:1.4rem; display:flex; align-items:center; justify-content:center; height:35px;">
+        <div class="stat-value" style="font-size:1.2rem; display:flex; align-items:center; justify-content:center; height:32px;">
           {% if dominant_mood == 'sad' %}😔 Trist
           {% elif dominant_mood == 'chillout' %}😌 Chill
           {% elif dominant_mood == 'happy' %}😄 Fericit
           {% else %}—{% endif %}
         </div>
-        <div class="stat-label">Stare Dominantă</div>
+        <div class="stat-label">Stare dominantă</div>
       </div>
     </div>
 
     {% if distribution %}
-    <h3 style="font-size:0.9rem; color:var(--muted); margin-bottom:0.9rem; text-transform:uppercase; letter-spacing:0.05em;">Distribuția Stărilor</h3>
+    <div class="section-label">Distribuția stărilor</div>
     {% for item in distribution %}
       <div class="dist-row">
-        <span class="mood-badge mood-{{ item.mood_tag }}" style="min-width:80px; justify-content:center;">
+        <span class="mood-badge mood-{{ item.mood_tag }}" style="min-width:70px; justify-content:center; font-size:0.75rem;">
           {% if item.mood_tag == 'sad' %}Trist
           {% elif item.mood_tag == 'chillout' %}Chill
           {% else %}Fericit{% endif %}
         </span>
         <div class="dist-bar-wrap">
           <div class="dist-bar"
-               style="width:{% widthratio item.count total_sessions 100 %}%; background:{% if item.mood_tag == 'sad' %}#3b82f6{% elif item.mood_tag == 'chillout' %}#a855f7{% else %}#f59e0b{% endif %};"></div>
+               style="width:{% widthratio item.count total_sessions 100 %}%; background:{% if item.mood_tag == 'sad' %}#2980b9{% elif item.mood_tag == 'chillout' %}#8e44ad{% else %}#e67e22{% endif %};"></div>
         </div>
         <span class="dist-count">{{ item.count }}</span>
       </div>
@@ -286,11 +220,11 @@
     {% endif %}
 
     {% if liked_artists %}
-    <h3 style="font-size:0.9rem; color:var(--muted); margin-top:1.4rem; margin-bottom:0.9rem; text-transform:uppercase; letter-spacing:0.05em;">👍 Artiști Apreciați</h3>
+    <div class="section-label">Artiști apreciați 👍</div>
     {% for artist in liked_artists %}
-    <div class="dist-row" style="margin-bottom:0.5rem;">
-      <span style="font-size:0.9rem; font-weight:500;">{{ artist.recommendation__artist_name }}</span>
-      <span style="font-size:0.8rem; background:rgba(34,197,94,0.12); color:#4ade80; border:1px solid rgba(34,197,94,0.3); border-radius:999px; padding:0.1rem 0.6rem;">{{ artist.count }} ❤️</span>
+    <div class="dist-row">
+      <span style="font-size:0.88rem; font-weight:500; flex:1;">{{ artist.recommendation__artist_name }}</span>
+      <span style="font-size:0.8rem; background:#eef6f1; color:var(--accent); border:1px solid #b8d8c8; border-radius:4px; padding:0.1rem 0.5rem;">{{ artist.count }} ❤️</span>
     </div>
     {% endfor %}
     {% endif %}
@@ -299,30 +233,22 @@
 </div>
 
 {% if total_sessions > 0 %}
-<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 (function () {
   const raw = {{ chart_data|safe }};
 
   const MOOD_COLORS = {
-    sad:      '#3b82f6',
-    chillout: '#a855f7',
-    happy:    '#f59e0b',
+    sad:      '#2980b9',
+    chillout: '#8e44ad',
+    happy:    '#e67e22',
   };
 
   const labels = raw.map(d => d.date);
   const scores = raw.map(d => d.score);
-  const pointColors = raw.map(d => MOOD_COLORS[d.mood] || '#a855f7');
-  const pointBorders = pointColors.map(c => c + 'cc');
+  const pointColors = raw.map(d => MOOD_COLORS[d.mood] || '#2d7a4f');
 
   const ctx = document.getElementById('moodChart').getContext('2d');
-
-  // Gradient fill under the line
-  const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-  gradient.addColorStop(0,   'rgba(168, 85, 247, 0.30)');
-  gradient.addColorStop(0.6, 'rgba(168, 85, 247, 0.06)');
-  gradient.addColorStop(1,   'rgba(168, 85, 247, 0.00)');
 
   new Chart(ctx, {
     type: 'line',
@@ -331,15 +257,13 @@
       datasets: [{
         label: 'Scor dispoziție',
         data: scores,
-        borderColor: 'rgba(168, 85, 247, 0.9)',
-        borderWidth: 2.5,
-        backgroundColor: gradient,
+        borderColor: '#2d7a4f',
+        borderWidth: 2,
+        backgroundColor: 'rgba(45,122,79,0.08)',
         pointBackgroundColor: pointColors,
-        pointBorderColor: pointBorders,
-        pointRadius: raw.length === 1 ? 7 : (raw.length <= 10 ? 6 : 4),
-        pointHoverRadius: raw.length === 1 ? 9 : 8,
-        pointBorderWidth: 2,
-        tension: 0.42,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.35,
         fill: true,
       }]
     },
@@ -350,13 +274,13 @@
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(19, 19, 31, 0.95)',
-          borderColor: 'rgba(139, 92, 246, 0.35)',
+          backgroundColor: '#fff',
+          borderColor: '#d8d8d0',
           borderWidth: 1,
-          titleColor: '#f0f0ff',
-          bodyColor: '#8888aa',
-          padding: 12,
-          cornerRadius: 10,
+          titleColor: '#1a1a1a',
+          bodyColor: '#666660',
+          padding: 10,
+          cornerRadius: 6,
           callbacks: {
             title: (items) => raw[items[0].dataIndex].date,
             label: (item) => {
@@ -364,41 +288,29 @@
               const moodLabel = { sad: 'Trist', chillout: 'Chill', happy: 'Fericit' }[d.mood] || d.mood;
               return [`Stare: ${moodLabel}  (${d.score})`, `"${d.snippet}"`];
             },
-            labelColor: (item) => ({
-              backgroundColor: MOOD_COLORS[raw[item.dataIndex].mood],
-              borderColor:     MOOD_COLORS[raw[item.dataIndex].mood],
-              borderRadius: 3,
-            }),
           }
         }
       },
       scales: {
         x: {
-          ticks: {
-            color: '#8888aa',
-            font: { family: 'Outfit', size: 11 },
-            maxRotation: 35,
-            maxTicksLimit: raw.length <= 6 ? raw.length : 6,
-          },
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          border: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { color: '#666660', font: { family: 'Inter', size: 11 }, maxRotation: 35, maxTicksLimit: 6 },
+          grid: { color: '#f0f0ec' },
+          border: { color: '#d8d8d0' },
         },
         y: {
-          min: 0,
-          max: 1,
+          min: 0, max: 1,
           ticks: {
-            color: '#8888aa',
-            font: { family: 'Outfit', size: 11 },
+            color: '#666660',
+            font: { family: 'Inter', size: 11 },
             stepSize: 0.22,
             callback: (v) => {
-              if (v <= 0.10) return 'Trist';
               if (v <= 0.44) return 'Trist';
               if (v <= 0.70) return 'Chill';
-              if (v <= 1.00) return 'Fericit';
+              return 'Fericit';
             }
           },
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          border: { color: 'rgba(255,255,255,0.06)' },
+          grid: { color: '#f0f0ec' },
+          border: { color: '#d8d8d0' },
         }
       }
     }
@@ -407,25 +319,24 @@
 </script>
 {% endif %}
 
-<!-- ── Delete Account Modal ── -->
+<!-- Delete Account Modal -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal-box">
-    <div class="modal-title">🗑 Șterge contul definitiv</div>
+    <div class="modal-title">Șterge contul definitiv</div>
     <div class="modal-body">
-      Această acțiune este <strong style="color:#f87171;">ireversibilă</strong>. Toate sesiunile,
+      Această acțiune este <strong style="color:var(--error);">ireversibilă</strong>. Toate sesiunile,
       recomandările și feedback-ul tău vor fi șterse permanent.<br><br>
       Introdu parola pentru a confirma:
     </div>
     <form method="post" action="/account/delete/">
       {% csrf_token %}
-      <div class="form-group" style="margin-bottom:1.2rem;">
+      <div class="form-group" style="margin-bottom:1rem;">
         <input
           type="password"
           name="password"
           placeholder="Parola ta actuală"
           required
           autocomplete="current-password"
-          style="width:100%; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.3);"
         >
       </div>
       <div class="modal-actions">
@@ -434,20 +345,16 @@
           class="btn btn-secondary"
           onclick="document.getElementById('delete-modal').classList.remove('open')"
         >Anulează</button>
-        <button type="submit" class="btn btn-danger" style="font-size:0.9rem;">
-          Șterge definitiv
-        </button>
+        <button type="submit" class="btn btn-danger">Șterge definitiv</button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-// Close modal on overlay click (outside the box)
 document.getElementById('delete-modal').addEventListener('click', function(e) {
   if (e.target === this) this.classList.remove('open');
 });
-// Close on Escape key
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') document.getElementById('delete-modal').classList.remove('open');
 });

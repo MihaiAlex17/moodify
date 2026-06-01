@@ -3,160 +3,134 @@
 
 {% block extra_css %}
 <style>
-  /* ── Page header ── */
-  .search-header { text-align: center; margin-bottom: 2.5rem; }
-  .search-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
-  .search-header p  { color: var(--muted); font-size: 1rem; }
+  .search-header { margin-bottom: 1.5rem; }
 
-  /* ── Search input wrapper ── */
   .search-wrap {
     position: relative;
-    max-width: 600px;
-    margin: 0 auto 2rem;
+    max-width: 560px;
+    margin-bottom: 1.5rem;
   }
   .search-icon {
-    position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%);
-    font-size: 1.1rem; pointer-events: none; color: var(--muted); z-index: 1;
+    position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%);
+    color: var(--muted); pointer-events: none; font-size: 1rem;
   }
   #search-input {
     width: 100%;
-    background: rgba(255,255,255,0.05);
+    background: var(--white);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius);
     color: var(--text);
-    font-family: 'Outfit', sans-serif;
-    font-size: 1.05rem;
-    padding: 0.85rem 1rem 0.85rem 3rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.65rem 0.9rem 0.65rem 2.6rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.15s;
   }
   #search-input:focus {
-    border-color: var(--p2);
-    box-shadow: 0 0 0 3px rgba(168,85,247,0.15);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(45,122,79,0.12);
   }
 
-  /* ── Dropdown — appended to <body>, position:fixed via JS ── */
   #suggestions {
-    position: fixed;            /* fixed so it escapes ALL stacking contexts */
-    background: #1c1c2e;
-    border: 1px solid rgba(139,92,246,0.4);
-    border-radius: 12px;
+    position: absolute;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     overflow: hidden;
-    z-index: 99999;             /* always on top of everything */
-    box-shadow: 0 20px 50px rgba(0,0,0,0.65);
+    z-index: 999;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     display: none;
   }
   .suggestion-item {
-    padding: 0.75rem 1.1rem;
+    padding: 0.65rem 0.9rem;
     cursor: pointer;
-    transition: background 0.15s;
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid #f0f0ec;
+    font-size: 0.9rem;
   }
   .suggestion-item:last-child { border-bottom: none; }
-  .suggestion-item:hover { background: rgba(168,85,247,0.15); }
-  .sug-name   { font-size: 0.95rem; font-weight: 500; color: #f0f0ff; }
-  .sug-artist { font-size: 0.82rem; color: #8888aa; }
+  .suggestion-item:hover { background: #f5f5f0; }
+  .sug-name   { font-weight: 500; color: var(--text); }
+  .sug-artist { font-size: 0.8rem; color: var(--muted); }
 
-  /* ── Seed card ── */
-  #seed-section { display: none; margin-bottom: 2rem; }
+  /* Seed card */
+  #seed-section { display: none; margin-bottom: 1.25rem; }
   .seed-card {
-    background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(34,211,238,0.08));
-    border: 1px solid rgba(168,85,247,0.4);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
     border-radius: var(--radius);
-    padding: 1.2rem 1.6rem;
+    padding: 0.85rem 1rem;
     display: flex;
     align-items: center;
-    gap: 1.2rem;
-    box-shadow: 0 4px 24px rgba(124,58,237,0.15);
+    gap: 0.85rem;
   }
-  .seed-disc {
-    width: 50px; height: 50px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--p1), var(--cyan));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem; flex-shrink: 0;
-    animation: spin 8s linear infinite;
-    box-shadow: 0 0 16px rgba(124,58,237,0.4);
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .seed-icon { font-size: 1.5rem; }
   .seed-info { flex: 1; }
-  .seed-title  { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
-  .seed-artist { font-size: 0.88rem; color: var(--muted); }
+  .seed-title  { font-size: 0.95rem; font-weight: 600; }
+  .seed-artist { font-size: 0.83rem; color: var(--muted); }
   .seed-label  {
-    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--p3); font-weight: 600;
-    background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.25);
-    border-radius: 999px; padding: 0.2rem 0.7rem; white-space: nowrap;
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--accent); font-weight: 600;
+    background: #eef6f1; border: 1px solid #b8d8c8;
+    border-radius: 4px; padding: 0.2rem 0.6rem;
   }
 
-  /* ── Results section ── */
+  /* Results */
   #results-section { display: none; }
   .results-title {
-    font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);
-    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+    font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+    display: flex; align-items: center; gap: 0.5rem;
   }
   .results-count {
-    font-size: 0.78rem; color: var(--muted); background: rgba(255,255,255,0.06);
-    border-radius: 999px; padding: 0.15rem 0.6rem; font-weight: 400;
+    font-size: 0.78rem; color: var(--muted); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 4px; padding: 0.1rem 0.5rem; font-weight: 400;
   }
   .fallback-badge {
-    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
-    color: #f59e0b; font-weight: 600;
-    background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
-    border-radius: 999px; padding: 0.2rem 0.7rem;
+    font-size: 0.75rem; color: var(--happy); font-weight: 600;
+    background: #fdf0e3; border: 1px solid #f0d0a0;
+    border-radius: 4px; padding: 0.2rem 0.6rem;
   }
 
-  .tracks-grid { display: flex; flex-direction: column; gap: 0.85rem; }
-  .track-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 1rem 1.4rem; display: flex; align-items: center; gap: 1.1rem;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-    animation: fadeUp 0.35s ease both;
+  .tracks-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .track-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
   }
-  .track-card:hover {
-    transform: translateX(5px);
-    border-color: rgba(168,85,247,0.4);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-  }
-  .track-rank   { font-size: 1.3rem; font-weight: 700; color: var(--p1); min-width: 30px; text-align: center; }
+  .track-item:hover { border-color: #b0b0a8; }
+  .track-rank   { font-size: 0.82rem; font-weight: 700; color: var(--muted); min-width: 22px; text-align: center; }
   .track-info   { flex: 1; }
-  .track-name   { font-size: 0.97rem; font-weight: 600; margin-bottom: 0.15rem; }
-  .track-artist { font-size: 0.85rem; color: var(--muted); }
-  .track-actions { flex-shrink: 0; }
+  .track-name   { font-size: 0.93rem; font-weight: 600; }
+  .track-artist { font-size: 0.83rem; color: var(--muted); }
 
-  /* ── Loading ── */
-  #loading {
-    display: none; text-align: center; padding: 3rem 1rem; color: var(--muted);
-    flex-direction: column; align-items: center; gap: 1rem;
-  }
+  /* Loading */
+  #loading { display: none; text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: 0.9rem; }
   .spinner {
-    width: 36px; height: 36px;
-    border: 3px solid rgba(168,85,247,0.2);
-    border-top-color: var(--p2);
+    width: 28px; height: 28px;
+    border: 2px solid #e0e0dc;
+    border-top-color: var(--accent);
     border-radius: 50%;
-    animation: rotate 0.7s linear infinite;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 0.75rem;
   }
-  @keyframes rotate { to { transform: rotate(360deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Empty state ── */
-  #no-results {
-    display: none; text-align: center; padding: 2.5rem 1rem;
-    color: var(--muted); font-size: 0.95rem;
-  }
-  #no-results span { font-size: 2.5rem; display: block; margin-bottom: 0.8rem; }
+  #no-results { display: none; text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: 0.9rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="search-header fade-up">
-  <h1>Descoperă Piese Similare 🎵</h1>
-  <p>Caută orice piesă și îți găsim altele care sună la fel.</p>
+<div class="search-header">
+  <div class="page-title">Descoperă piese similare</div>
+  <div class="page-subtitle">Caută orice piesă și îți găsim altele care sună la fel.</div>
 </div>
 
-<!-- Search input -->
-<div class="search-wrap fade-up" style="animation-delay:80ms;" id="search-wrap">
+<div class="search-wrap" id="search-wrap">
   <span class="search-icon">🔍</span>
   <input
     id="search-input"
@@ -165,12 +139,12 @@
     autocomplete="off"
     spellcheck="false"
   >
+  <div id="suggestions"></div>
 </div>
 
-<!-- Seed song card -->
-<div id="seed-section" class="fade-up">
+<div id="seed-section">
   <div class="seed-card">
-    <div class="seed-disc">🎵</div>
+    <span class="seed-icon">🎵</span>
     <div class="seed-info">
       <div class="seed-title"  id="seed-title"></div>
       <div class="seed-artist" id="seed-artist"></div>
@@ -179,32 +153,23 @@
   </div>
 </div>
 
-<!-- Loading -->
-<div id="loading" style="display:none;">
-  <div style="display:flex; flex-direction:column; align-items:center; gap:1rem; padding:3rem 1rem; color:var(--muted);">
-    <div class="spinner"></div>
-    <span>Căutăm piese similare…</span>
-  </div>
+<div id="loading">
+  <div class="spinner"></div>
+  Căutăm piese similare…
 </div>
 
-<!-- No results -->
 <div id="no-results">
-  <span>😕</span>
-  Nu am găsit piese similare. Încearcă altă piesă.
+  😕 Nu am găsit piese similare. Încearcă altă piesă.
 </div>
 
-<!-- Results -->
 <div id="results-section">
   <div class="results-title">
     <span id="results-label">Piese similare</span>
     <span class="results-count" id="results-count"></span>
     <span class="fallback-badge" id="fallback-badge" style="display:none;">Alte piese din discografie</span>
   </div>
-  <div class="tracks-grid" id="tracks-grid"></div>
+  <div class="tracks-list" id="tracks-grid"></div>
 </div>
-
-<!-- Suggestions dropdown — appended to body in JS to escape stacking contexts -->
-<div id="suggestions"></div>
 
 <script>
 (function () {
@@ -220,27 +185,17 @@
   const resultsCount = document.getElementById('results-count');
   const fallbackBadge = document.getElementById('fallback-badge');
   const resultsLabel  = document.getElementById('results-label');
-
-  // ── Move suggestBox to <body> so it escapes all stacking contexts ──
-  document.body.appendChild(suggestBox);
+  const searchWrap   = document.getElementById('search-wrap');
 
   function positionDropdown() {
-    const rect = input.getBoundingClientRect();
-    suggestBox.style.top   = (rect.bottom + window.scrollY + 6) + 'px';
-    suggestBox.style.left  = rect.left + 'px';
-    suggestBox.style.width = rect.width + 'px';
-    // Switch from fixed to absolute so it scrolls with the page
-    suggestBox.style.position = 'absolute';
+    suggestBox.style.top   = input.offsetHeight + 4 + 'px';
+    suggestBox.style.left  = '0';
+    suggestBox.style.width = input.offsetWidth + 'px';
   }
 
-  function showDropdown()  { positionDropdown(); suggestBox.style.display = 'block'; }
-  function hideDropdown()  { suggestBox.style.display = 'none'; }
+  function showDropdown() { positionDropdown(); suggestBox.style.display = 'block'; }
+  function hideDropdown() { suggestBox.style.display = 'none'; }
 
-  // Reposition on scroll/resize in case user scrolls while dropdown is open
-  window.addEventListener('scroll', () => { if (suggestBox.style.display !== 'none') positionDropdown(); }, { passive: true });
-  window.addEventListener('resize', () => { if (suggestBox.style.display !== 'none') positionDropdown(); }, { passive: true });
-
-  // ── Autocomplete ──
   let debounceTimer = null;
 
   input.addEventListener('input', () => {
@@ -259,10 +214,10 @@
         data.forEach(item => {
           const div = document.createElement('div');
           div.className = 'suggestion-item';
-          div.innerHTML = `<span class="sug-name">${escHtml(item.name)}</span>
-                           <span class="sug-artist">${escHtml(item.artist)}</span>`;
+          div.innerHTML = `<div class="sug-name">${escHtml(item.name)}</div>
+                           <div class="sug-artist">${escHtml(item.artist)}</div>`;
           div.addEventListener('mousedown', (e) => {
-            e.preventDefault(); // prevent blur from firing before click
+            e.preventDefault();
             selectTrack(item.name, item.artist);
           });
           suggestBox.appendChild(div);
@@ -273,14 +228,10 @@
     }, 280);
   });
 
-  // Close on outside click
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('#search-wrap') && e.target !== suggestBox && !suggestBox.contains(e.target)) {
-      hideDropdown();
-    }
+    if (!searchWrap.contains(e.target)) hideDropdown();
   });
 
-  // Keyboard navigation
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       const first = suggestBox.querySelector('.suggestion-item');
@@ -289,17 +240,14 @@
     if (e.key === 'Escape') hideDropdown();
   });
 
-  // ── Select a track ──
   async function selectTrack(name, artist) {
     hideDropdown();
     input.value = `${name} — ${artist}`;
 
-    // Seed card
     document.getElementById('seed-title').textContent  = name;
     document.getElementById('seed-artist').textContent = artist;
     seedSection.style.display = 'block';
 
-    // Reset
     noResultsEl.style.display  = 'none';
     resultsEl.style.display    = 'none';
     loadingEl.style.display    = 'block';
@@ -317,31 +265,28 @@
         return;
       }
 
-      // Check if this is a fallback result
       const isFallback = tracks.some(t => t.is_fallback);
       resultsLabel.textContent = isFallback ? 'Alte piese de la' : 'Piese similare cu';
       fallbackBadge.style.display = isFallback ? 'inline-flex' : 'none';
 
-      // Render
       tracksGrid.innerHTML = '';
       tracks.forEach((t, i) => {
         const hasSpotify = t.spotify_url && t.spotify_url.startsWith('http');
-        const card = document.createElement('div');
-        card.className = 'track-card';
-        card.style.animationDelay = `${i * 55}ms`;
-        card.innerHTML = `
+        const item = document.createElement('div');
+        item.className = 'track-item';
+        item.innerHTML = `
           <div class="track-rank">${t.rank}</div>
           <div class="track-info">
             <div class="track-name">${escHtml(t.track_name)}</div>
             <div class="track-artist">${escHtml(t.artist_name)}</div>
           </div>
-          <div class="track-actions">
+          <div>
             ${hasSpotify
               ? `<a class="btn btn-spotify" href="${t.spotify_url}" target="_blank" rel="noopener">▶ Spotify</a>`
               : `<span style="color:var(--muted);font-size:0.82rem;">Indisponibil</span>`
             }
           </div>`;
-        tracksGrid.appendChild(card);
+        tracksGrid.appendChild(item);
       });
 
       resultsCount.textContent = `${tracks.length} piese`;

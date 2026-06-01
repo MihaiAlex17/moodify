@@ -2,20 +2,20 @@
 {% block title %}Cont activat — Moodify{% endblock %}
 {% block extra_css %}
 <style>
-  main { display:flex; justify-content:center; align-items:center; }
-  .info-card { max-width:460px; width:100%; text-align:center; }
-  .big-icon { font-size:3.5rem; margin-bottom:1rem; }
-  h1 { font-size:1.8rem; font-weight:700; margin-bottom:0.6rem; }
-  p  { color:var(--muted); line-height:1.7; }
+  main { display:flex; justify-content:center; align-items:flex-start; padding-top:3rem; }
+  .info-card { max-width:420px; width:100%; text-align:center; }
+  .big-icon { font-size:2.5rem; margin-bottom:0.75rem; }
+  .info-title { font-size:1.2rem; font-weight:700; margin-bottom:0.5rem; }
+  .info-text { color:var(--muted); line-height:1.65; font-size:0.9rem; }
 </style>
 {% endblock %}
 {% block content %}
-<div class="info-card card fade-up">
+<div class="info-card card">
   <div class="big-icon">🎉</div>
-  <h1>Contul tău este activ!</h1>
-  <p>Bun venit, <strong>{{ user.username }}</strong>! Email-ul a fost confirmat cu succes.</p>
-  <a class="btn btn-primary" href="/" style="margin-top:1.5rem;display:inline-flex;">
-    Descoperă recomandări muzicale ✨
+  <div class="info-title">Contul tău este activ!</div>
+  <p class="info-text">Bun venit, <strong>{{ user.username }}</strong>! Email-ul a fost confirmat cu succes.</p>
+  <a class="btn btn-primary" href="/" style="margin-top:1.25rem;display:inline-flex;">
+    Descoperă recomandări muzicale
   </a>
 </div>
 {% endblock %}

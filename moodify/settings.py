@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Incarca variabilele din .env (override=True asigura ca fisierul are prioritate)
+# incarca variabilele din fisierul .env
 _env_file = BASE_DIR / '.env'
 if not _env_file.exists():
     raise FileNotFoundError(f'.env not found at {_env_file}. Create it based on .env.example.')
@@ -55,6 +55,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'moodify.wsgi.application'
 
+# baza de date PostgreSQL, valorile vin din .env
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -66,11 +67,13 @@ DATABASES = {
     }
 }
 
+# permite autentificarea cu email sau username
 AUTHENTICATION_BACKENDS = [
     'mood.backends.EmailOrUsernameModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# validatoare pentru parola: lungime minima + validator propriu
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {
@@ -82,7 +85,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'mood.validators.StrongPasswordValidator'},
 ]
 
-# --- Email (Gmail SMTP) ---
+# trimitere email prin Gmail SMTP
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST          = 'smtp.gmail.com'
 EMAIL_PORT          = 587

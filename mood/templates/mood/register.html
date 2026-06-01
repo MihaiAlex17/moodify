@@ -3,24 +3,31 @@
 
 {% block extra_css %}
 <style>
-  body { justify-content: center; align-items: center; }
-  main { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; }
-  .auth-card { width: 100%; max-width: 440px; }
-  .auth-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
-  .auth-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
-  .auth-footer { margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--muted); }
-  .auth-footer a { color: var(--p3); text-decoration: none; }
+  main { display: flex; justify-content: center; align-items: flex-start; padding-top: 3rem; }
+  .auth-card { width: 100%; max-width: 400px; }
+  .auth-brand { text-align: center; margin-bottom: 1.75rem; }
+  .auth-brand .logo { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+  .auth-brand .name { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .auth-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.25rem; }
+  .auth-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.5rem; }
+  .auth-divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+  .auth-footer { text-align: center; font-size: 0.88rem; color: var(--muted); margin-top: 1rem; }
+  .auth-footer a { color: var(--accent); text-decoration: none; }
   .auth-footer a:hover { text-decoration: underline; }
-  .field-errors { margin-top: 0.3rem; }
-  .field-errors li { color: #f87171; font-size: 0.83rem; list-style: none; }
+  .field-errors { margin-top: 0.25rem; list-style: none; }
+  .field-errors li { color: var(--error); font-size: 0.83rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="auth-card card fade-up">
-  <div style="text-align:center;font-size:2.4rem;margin-bottom:0.5rem;">🎵</div>
+<div class="auth-card card">
+  <div class="auth-brand">
+    <span class="logo">🎵</span>
+    <span class="name">Moodify</span>
+  </div>
+
   <div class="auth-title">Creează cont</div>
-  <div class="auth-sub">Alătură-te și primești recomandări muzicale personalizate pe baza stării tale.</div>
+  <div class="auth-sub">Alătură-te și primești recomandări muzicale pe baza stării tale.</div>
 
   <form method="post" novalidate>
     {% csrf_token %}
@@ -29,33 +36,42 @@
       <label for="{{ form.username.id_for_label }}">Username</label>
       <input id="{{ form.username.id_for_label }}" type="text" name="username"
              value="{{ form.username.value|default:'' }}" autocomplete="username" autofocus required>
-      {% if form.username.errors %}<ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      {% if form.username.errors %}
+      <ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
     </div>
 
     <div class="form-group">
       <label for="{{ form.email.id_for_label }}">Email</label>
       <input id="{{ form.email.id_for_label }}" type="email" name="email"
              value="{{ form.email.value|default:'' }}" autocomplete="email" required>
-      {% if form.email.errors %}<ul class="field-errors">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      {% if form.email.errors %}
+      <ul class="field-errors">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
     </div>
 
     <div class="form-group">
       <label for="{{ form.password1.id_for_label }}">Parolă</label>
       <input id="{{ form.password1.id_for_label }}" type="password" name="password1" autocomplete="new-password" required>
-      {% if form.password1.errors %}<ul class="field-errors">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      {% if form.password1.errors %}
+      <ul class="field-errors">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
     </div>
 
     <div class="form-group">
       <label for="{{ form.password2.id_for_label }}">Confirmă parola</label>
       <input id="{{ form.password2.id_for_label }}" type="password" name="password2" autocomplete="new-password" required>
-      {% if form.password2.errors %}<ul class="field-errors">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      {% if form.password2.errors %}
+      <ul class="field-errors">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
     </div>
 
-    <button class="btn btn-primary" style="width:100%;justify-content:center;" type="submit">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;" type="submit">
       Creează cont
     </button>
   </form>
 
+  <hr class="auth-divider" style="border:none;border-top:1px solid var(--border);margin:1.25rem 0;">
   <div class="auth-footer">
     Ai deja cont? <a href="/login/">Autentifică-te</a>
   </div>

@@ -3,59 +3,58 @@
 
 {% block extra_css %}
 <style>
-  .hero { text-align: center; margin-bottom: 2.5rem; }
-  .hero h1 {
-    font-size: 2.6rem; font-weight: 700; line-height: 1.2;
-    background: linear-gradient(135deg, var(--p2) 0%, var(--cyan) 100%);
-    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 0.6rem;
-  }
-  .hero p { color: var(--muted); font-size: 1.05rem; }
+  .mood-intro { margin-bottom: 1.5rem; }
+  .mood-intro h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .mood-intro p { color: var(--muted); font-size: 0.9rem; }
 
-  .mood-form { max-width: 640px; margin: 0 auto; }
+  .mood-form { max-width: 600px; }
+
   .big-textarea {
-    width: 100%; background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    color: var(--text); font-family: 'Outfit', sans-serif; font-size: 1.1rem;
-    padding: 1.2rem 1.4rem; outline: none; resize: vertical; min-height: 140px;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    padding: 0.85rem 1rem;
+    outline: none;
+    resize: vertical;
+    min-height: 130px;
+    transition: border-color 0.15s;
+    line-height: 1.6;
   }
   .big-textarea:focus {
-    border-color: var(--p2);
-    box-shadow: 0 0 0 4px rgba(168,85,247,0.15);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(45,122,79,0.12);
   }
-  .big-textarea::placeholder { color: var(--muted); }
+  .big-textarea::placeholder { color: #aaa; }
 
-  .submit-row { margin-top: 1.2rem; display: flex; justify-content: center; }
-  .btn-submit {
-    padding: 0.85rem 3rem; font-size: 1.1rem;
-    background: linear-gradient(135deg, var(--p1), var(--p2));
-    color: #fff; border: none; border-radius: 12px; font-family: 'Outfit', sans-serif;
-    font-weight: 600; cursor: pointer;
-    box-shadow: 0 6px 24px rgba(124,58,237,0.45);
-    transition: all 0.2s;
-    position: relative; overflow: hidden;
-  }
-  .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(124,58,237,0.6); }
-  .btn-submit:active { transform: translateY(0); }
-
-  .mood-hints { display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+  .hint-label { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.5rem; margin-top: 1.25rem; }
+  .mood-hints { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
   .hint-chip {
-    padding: 0.35rem 0.9rem; border-radius: 999px;
-    font-size: 0.82rem; color: var(--muted); border: 1px solid var(--border);
-    cursor: pointer; transition: all 0.15s;
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.83rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    background: var(--white);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
   }
-  .hint-chip:hover { border-color: var(--p2); color: var(--p3); background: rgba(139,92,246,0.08); }
+  .hint-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .submit-row { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="hero fade-up">
+<div class="mood-intro">
   <h1>Cum te simți astăzi?</h1>
-  <p>Descrie starea ta și îți recomandăm muzică perfectă pentru moment.</p>
+  <p>Descrie starea ta și îți recomandăm muzică potrivită pentru moment.</p>
 </div>
 
-<div class="mood-form fade-up" style="animation-delay:0.1s">
+<div class="mood-form">
   {% if error %}
   <div class="message error" style="margin-bottom:1rem;">{{ error }}</div>
   {% endif %}
@@ -66,34 +65,30 @@
       id="mood_text"
       name="mood_text"
       class="big-textarea"
-      placeholder="Ex: Mă simt obosit și stres... sau Sunt fericit, a mers totul bine azi!"
+      placeholder="Ex: Mă simt obosit și stresat după o zi grea... sau Sunt fericit, totul a mers bine azi!"
       autofocus
     ></textarea>
-    
-    <div style="margin-top: 1rem;">
-      <label for="artist" style="display: block; font-size: 0.88rem; color: var(--muted); margin-bottom: 0.4rem;">
-        Artist Preferat (Opțional)
-      </label>
-      <input type="text" id="artist" name="artist" placeholder="Ex: Ed Sheeran" 
-             style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); 
-                    border-radius: 10px; color: var(--text); padding: 0.75rem 1rem; outline: none;
-                    font-family: 'Outfit', sans-serif; font-size: 1rem;">
+
+    <div class="form-group" style="margin-top: 0.85rem;">
+      <label for="artist">Artist preferat (opțional)</label>
+      <input type="text" id="artist" name="artist" placeholder="Ex: Ed Sheeran, Eminescu...">
     </div>
-    
+
+    <div class="hint-label">Sau alege o stare rapidă:</div>
+    <div class="mood-hints">
+      <span class="hint-chip" onclick="setHint('Mă simt trist și singur astăzi.')">😔 Trist</span>
+      <span class="hint-chip" onclick="setHint('Sunt ok, nu mă simt nici bine nici rău.')">😐 Neutru</span>
+      <span class="hint-chip" onclick="setHint('Sunt fericit, totul merge perfect!')">😄 Fericit</span>
+      <span class="hint-chip" onclick="setHint('Mă simt relaxat și calm.')">😌 Relaxat</span>
+      <span class="hint-chip" onclick="setHint('Sunt stresat și obosit.')">😰 Stresat</span>
+    </div>
+
     <div class="submit-row">
-      <button class="btn-submit" type="submit" id="submitBtn">
-        Analizează starea mea ✨
+      <button class="btn btn-primary" type="submit" id="submitBtn">
+        Analizează starea mea
       </button>
     </div>
   </form>
-
-  <div class="mood-hints">
-    <span class="hint-chip" onclick="setHint('Mă simt trist și singur astăzi.')">😔 Trist</span>
-    <span class="hint-chip" onclick="setHint('Sunt ok, nu mă simt nici bine nici rău.')">😐 Neutru</span>
-    <span class="hint-chip" onclick="setHint('Sunt fericit, totul merge perfect!')">😄 Fericit</span>
-    <span class="hint-chip" onclick="setHint('Mă simt relaxat și calm.')">😌 Relaxat</span>
-    <span class="hint-chip" onclick="setHint('Sunt stresat și obosit.')">😰 Stresat</span>
-  </div>
 </div>
 
 <script>

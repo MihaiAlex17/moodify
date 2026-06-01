@@ -4,67 +4,84 @@
 
 {% block extra_css %}
 <style>
-  .page-header { margin-bottom: 2rem; }
-  .page-header h1 { font-size: 2rem; font-weight: 700; }
-  .page-header p { color: var(--muted); margin-top: 0.3rem; }
+  .page-header { margin-bottom: 1.5rem; }
 
   .session-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); margin-bottom: 1.2rem; overflow: hidden;
-    transition: border-color 0.2s;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
   }
-  .session-card:hover { border-color: rgba(168,85,247,0.35); }
-
   .session-header {
-    padding: 1.1rem 1.4rem; display: flex; align-items: center;
-    gap: 1rem; flex-wrap: wrap; cursor: pointer;
-    border-bottom: 1px solid transparent; transition: border-color 0.2s;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    cursor: pointer;
+    user-select: none;
   }
-  .session-header.open { border-bottom-color: var(--border); }
-  .session-meta { flex: 1; }
+  .session-header:hover { background: #f8f8f5; }
+  .session-header.open { border-bottom: 1px solid var(--border); }
+
+  .session-meta { flex: 1; min-width: 0; }
   .session-input {
-    font-size: 0.92rem; margin-top: 0.2rem; color: var(--muted);
-    font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;
+    font-size: 0.88rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 380px;
+    margin-top: 0.15rem;
   }
-  .session-date { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+  .session-date { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
   .score-pill {
-    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-    border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.8rem; color: var(--muted);
+    font-size: 0.78rem; color: var(--muted);
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.15rem 0.55rem;
   }
-  .chevron { font-size: 0.8rem; color: var(--muted); transition: transform 0.25s; }
+  .chevron { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; margin-left: auto; }
   .chevron.open { transform: rotate(180deg); }
 
-  .session-body { padding: 1rem 1.4rem; display: none; }
+  .session-body { display: none; padding: 0.75rem 1rem; }
   .session-body.open { display: block; }
 
   .track-row {
-    display: flex; align-items: center; gap: 1rem;
-    padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0ec;
+    font-size: 0.88rem;
   }
   .track-row:last-child { border-bottom: none; }
-  .track-num { font-size: 0.85rem; color: var(--p2); min-width: 22px; font-weight: 600; }
+  .track-num { font-size: 0.82rem; color: var(--accent); min-width: 20px; font-weight: 600; }
   .track-text { flex: 1; }
-  .track-text .tn { font-size: 0.92rem; font-weight: 500; }
-  .track-text .ta { font-size: 0.82rem; color: var(--muted); }
+  .track-text .tn { font-weight: 500; }
+  .track-text .ta { font-size: 0.8rem; color: var(--muted); }
 
   .empty-state {
-    text-align: center; padding: 4rem 1rem;
+    text-align: center;
+    padding: 3.5rem 1rem;
     color: var(--muted);
   }
-  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
-  .empty-state h2 { font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text); }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .empty-state h2 { font-size: 1.1rem; margin-bottom: 0.4rem; color: var(--text); font-weight: 600; }
+  .empty-state p { font-size: 0.88rem; margin-bottom: 1.25rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header fade-up">
-  <h1>Istoricul meu 📖</h1>
-  <p>Toate sesiunile tale de analiză a stării, cu recomandările aferente.</p>
+<div class="page-header">
+  <div class="page-title">Istoricul meu</div>
+  <div class="page-subtitle">Toate sesiunile tale de analiză a stării, cu recomandările aferente.</div>
 </div>
 
 {% if sessions %}
   {% for session in sessions %}
-  <div class="session-card fade-up" style="animation-delay:{{ forloop.counter0 }}0ms">
+  <div class="session-card">
     <div class="session-header" onclick="toggleSession({{ session.id }})">
       <span class="mood-badge mood-{{ session.mood_tag }}">
         {% if session.mood_tag == 'sad' %}😔 Trist
@@ -91,24 +108,24 @@
         <a class="btn btn-spotify" href="{{ track.spotify_url }}" target="_blank" rel="noopener">▶</a>
         {% endif %}
         {% if user_feedback|get_item:track.id == True %}
-          <span title="Ți-a plăcut" style="font-size:1rem; opacity:0.85;">👍</span>
+          <span title="Ți-a plăcut">👍</span>
         {% elif user_feedback|get_item:track.id == False %}
-          <span title="Nu ți-a plăcut" style="font-size:1rem; opacity:0.85;">👎</span>
+          <span title="Nu ți-a plăcut">👎</span>
         {% endif %}
       </div>
       {% empty %}
-      <p style="color:var(--muted);font-size:0.9rem;">Nicio piesă salvată pentru această sesiune.</p>
+      <p style="color:var(--muted);font-size:0.88rem;">Nicio piesă salvată pentru această sesiune.</p>
       {% endfor %}
     </div>
   </div>
   {% endfor %}
 
 {% else %}
-<div class="empty-state fade-up">
+<div class="empty-state">
   <div class="icon">🎵</div>
   <h2>Nicio sesiune încă</h2>
   <p>Descrie-ți starea și primești prima ta recomandare muzicală.</p>
-  <a class="btn btn-primary" href="/" style="margin-top:1.5rem;display:inline-flex;">Începe acum</a>
+  <a class="btn btn-primary" href="/">Începe acum</a>
 </div>
 {% endif %}
 

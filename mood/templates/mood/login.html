@@ -3,28 +3,29 @@
 
 {% block extra_css %}
 <style>
-  body { justify-content: center; align-items: center; }
-  main { display: flex; justify-content: center; align-items: center; padding: 2rem 1rem; }
-  .auth-card { width: 100%; max-width: 420px; }
-  .auth-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem; }
-  .auth-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
-  .auth-footer { margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--muted); }
-  .auth-footer a { color: var(--p3); text-decoration: none; }
+  main { display: flex; justify-content: center; align-items: flex-start; padding-top: 3rem; }
+  .auth-card { width: 100%; max-width: 380px; }
+  .auth-brand { text-align: center; margin-bottom: 1.75rem; }
+  .auth-brand .logo { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+  .auth-brand .name { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .auth-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.25rem; }
+  .auth-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.5rem; }
+  .auth-divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+  .auth-footer { text-align: center; font-size: 0.88rem; color: var(--muted); margin-top: 1rem; }
+  .auth-footer a { color: var(--accent); text-decoration: none; }
   .auth-footer a:hover { text-decoration: underline; }
-  .brand-hero { text-align: center; margin-bottom: 2rem; }
-  .brand-hero .logo { font-size: 2.8rem; margin-bottom: 0.3rem; }
-  .brand-hero .name { font-size: 1.5rem; font-weight: 700;
-    background: linear-gradient(135deg, var(--p2), var(--cyan));
-    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .forgot-link { display: block; text-align: right; font-size: 0.83rem; color: var(--muted); text-decoration: none; margin-top: 0.25rem; }
+  .forgot-link:hover { color: var(--accent); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="auth-card card fade-up">
-  <div class="brand-hero">
-    <div class="logo">🎵</div>
-    <div class="name">Moodify</div>
+<div class="auth-card card">
+  <div class="auth-brand">
+    <span class="logo">🎵</span>
+    <span class="name">Moodify</span>
   </div>
+
   <div class="auth-title">Bun venit înapoi</div>
   <div class="auth-sub">Autentifică-te pentru a-ți vedea recomandările.</div>
 
@@ -36,22 +37,19 @@
     {% csrf_token %}
     <div class="form-group">
       <label for="id_username">Username sau Email</label>
-      <input id="id_username" type="text" name="username" autocomplete="username" autofocus required placeholder="Ex: alex sau alex@exemplu.com">
+      <input id="id_username" type="text" name="username" autocomplete="username" autofocus required placeholder="alex sau alex@email.com">
     </div>
     <div class="form-group">
       <label for="id_password">Parolă</label>
       <input id="id_password" type="password" name="password" autocomplete="current-password" required>
+      <a href="/password-reset/" class="forgot-link">Ai uitat parola?</a>
     </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;" type="submit">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;" type="submit">
       Intră în cont
     </button>
-    <div style="text-align:center;margin-top:0.9rem;">
-      <a href="/password-reset/" style="font-size:0.88rem;color:var(--muted);text-decoration:none;">
-        Ai uitat parola?
-      </a>
-    </div>
   </form>
 
+  <hr class="auth-divider">
   <div class="auth-footer">
     Nu ai cont? <a href="/register/">Înregistrează-te</a>
   </div>

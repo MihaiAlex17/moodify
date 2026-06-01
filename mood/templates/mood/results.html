@@ -4,72 +4,69 @@
 
 {% block extra_css %}
 <style>
-  .results-header { margin-bottom: 2rem; }
-  .results-header h1 { font-size: 1.9rem; font-weight: 700; margin-bottom: 0.5rem; }
-  .meta-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .results-header { margin-bottom: 1.5rem; }
+  .results-header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .meta-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
   .score-pill {
-    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-    border-radius: 999px; padding: 0.25rem 0.8rem; font-size: 0.82rem; color: var(--muted);
+    font-size: 0.8rem; color: var(--muted);
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.15rem 0.6rem;
   }
-  .quote-box {
-    background: rgba(255,255,255,0.03); border-left: 3px solid var(--p1);
-    border-radius: 0 8px 8px 0; padding: 0.8rem 1.2rem; margin: 1rem 0 2rem;
-    color: var(--muted); font-style: italic; font-size: 0.95rem;
+  .user-quote {
+    background: var(--white);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 0.65rem 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-style: italic;
   }
 
-  .tracks-grid { display: flex; flex-direction: column; gap: 1rem; }
-  .track-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 1.1rem 1.4rem; display: flex; align-items: center; gap: 1.2rem;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  .tracks-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .track-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
-  .track-card:hover {
-    transform: translateX(5px);
-    border-color: rgba(168,85,247,0.4);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
+  .track-item:hover { border-color: #b0b0a8; }
   .track-rank {
-    font-size: 1.4rem; font-weight: 700; color: var(--p1);
-    min-width: 32px; text-align: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 24px;
+    text-align: center;
   }
   .track-info { flex: 1; }
-  .track-name   { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
-  .track-artist { font-size: 0.88rem; color: var(--muted); }
+  .track-name { font-size: 0.95rem; font-weight: 600; }
+  .track-artist { font-size: 0.85rem; color: var(--muted); }
+  .track-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
 
-  /* ── Feedback buttons ── */
-  .track-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
   .fb-btn {
-    background: rgba(255,255,255,0.05);
+    background: var(--white);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.38rem 0.7rem;
-    font-size: 1.05rem;
+    border-radius: 4px;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: background 0.18s, border-color 0.18s, transform 0.15s;
+    transition: border-color 0.15s, background 0.15s;
     line-height: 1;
-    color: var(--text);
   }
-  .fb-btn:hover { transform: scale(1.12); background: rgba(255,255,255,0.1); }
+  .fb-btn:hover { border-color: #aaa; background: #f8f8f5; }
+  .fb-btn.liked-active { background: #edfbf2; border-color: #7cc49d; }
+  .fb-btn.disliked-active { background: #fdf2f0; border-color: #e8a0a0; }
 
-  /* Active states */
-  .fb-btn.liked-active {
-    background: rgba(34, 197, 94, 0.18);
-    border-color: rgba(34, 197, 94, 0.55);
-    box-shadow: 0 0 8px rgba(34,197,94,0.25);
-  }
-  .fb-btn.disliked-active {
-    background: rgba(248, 113, 113, 0.18);
-    border-color: rgba(248, 113, 113, 0.55);
-    box-shadow: 0 0 8px rgba(248,113,113,0.25);
-  }
-
-  .actions-row { display: flex; gap: 1rem; margin-top: 2.5rem; }
+  .actions-row { display: flex; gap: 0.75rem; margin-top: 1.75rem; }
 </style>
 {% endblock %}
 
 {% block content %}
 {% with tag=session.mood_tag %}
-<div class="results-header fade-up">
+<div class="results-header">
   <h1>Recomandările tale 🎧</h1>
   <div class="meta-row">
     <span class="mood-badge mood-{{ tag }}">
@@ -80,13 +77,13 @@
   </div>
 </div>
 
-<div class="quote-box fade-up" style="animation-delay:0.05s">
+<div class="user-quote">
   "{{ session.user_input }}"
 </div>
 
-<div class="tracks-grid">
+<div class="tracks-list">
   {% for track in tracks %}
-  <div class="track-card fade-up" style="animation-delay:{{ forloop.counter0 }}00ms" id="track-card-{{ track.id }}">
+  <div class="track-item" id="track-card-{{ track.id }}">
     <div class="track-rank">{{ track.rank }}</div>
     <div class="track-info">
       <div class="track-name">{{ track.track_name }}</div>
@@ -99,7 +96,6 @@
       <span style="color:var(--muted);font-size:0.82rem;">Indisponibil</span>
       {% endif %}
 
-      <!-- 👍 -->
       <button
         class="fb-btn {% if user_feedback|get_item:track.id == True %}liked-active{% endif %}"
         id="like-{{ track.id }}"
@@ -107,7 +103,6 @@
         title="Îmi place"
         aria-label="Like">👍</button>
 
-      <!-- 👎 -->
       <button
         class="fb-btn {% if user_feedback|get_item:track.id == False %}disliked-active{% endif %}"
         id="dislike-{{ track.id }}"
@@ -117,11 +112,11 @@
     </div>
   </div>
   {% empty %}
-  <p style="color:var(--muted);text-align:center;padding:2rem;">Nu am găsit piese. Încearcă din nou.</p>
+  <p style="color:var(--muted);padding:1.5rem 0;">Nu am găsit piese. Încearcă din nou.</p>
   {% endfor %}
 </div>
 
-<div class="actions-row fade-up">
+<div class="actions-row">
   <a class="btn btn-primary" href="/">Încearcă din nou</a>
   <a class="btn btn-secondary" href="/history/">Vezi istoricul</a>
 </div>
@@ -144,21 +139,13 @@ async function sendFeedback(trackId, liked) {
   });
 
   if (!res.ok) return;
-  const data = await res.json();   // {liked: true | false | null}
+  const data = await res.json();
 
-  // Reset both buttons
   likeBtn.classList.remove('liked-active');
   dislikeBtn.classList.remove('disliked-active');
 
   if (data.liked === true)  likeBtn.classList.add('liked-active');
   if (data.liked === false) dislikeBtn.classList.add('disliked-active');
-
-  // Micro-bounce animation
-  const active = data.liked === true ? likeBtn : data.liked === false ? dislikeBtn : null;
-  if (active) {
-    active.style.transform = 'scale(1.3)';
-    setTimeout(() => active.style.transform = '', 200);
-  }
 }
 </script>
 {% endblock %}
