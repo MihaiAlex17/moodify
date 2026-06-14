@@ -99,14 +99,16 @@
       <button
         class="fb-btn {% if user_feedback|get_item:track.id == True %}liked-active{% endif %}"
         id="like-{{ track.id }}"
-        onclick="sendFeedback({{ track.id }}, true)"
+        data-id="{{ track.id }}"
+        onclick="sendFeedback(this.dataset.id, true)"
         title="Îmi place"
         aria-label="Like">👍</button>
 
       <button
         class="fb-btn {% if user_feedback|get_item:track.id == False %}disliked-active{% endif %}"
         id="dislike-{{ track.id }}"
-        onclick="sendFeedback({{ track.id }}, false)"
+        data-id="{{ track.id }}"
+        onclick="sendFeedback(this.dataset.id, false)"
         title="Nu îmi place"
         aria-label="Dislike">👎</button>
     </div>
